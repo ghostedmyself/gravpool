@@ -1,0 +1,15 @@
+"""Example local creds file — copy to `_local_creds.py` and fill in.
+
+The values are the public embedded app credentials shipped by the Antigravity
+IDE; the authoritative source is the open-source upstream
+router-for-me/CLIProxyAPI: `internal/auth/antigravity/constants.go`.
+They identify the app, not your Google account.
+
+Usage:
+    cp antigravity/_local_creds.py.example antigravity/_local_creds.py
+    # then edit antigravity/_local_creds.py with the real values
+    # (or export ANTIGRAVITY_CLIENT_ID / ANTIGRAVITY_CLIENT_SECRET)
+"""
+
+CLIENT_ID = "<paste-client-id-here>"
+CLIENT_SECRET = "<paste-client-secret-here>"

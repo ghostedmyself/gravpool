@@ -1,0 +1,11 @@
+# never commit credentials
+antigravity-*.json
+antigravity/_local_creds.py
+*.json.tmp
+auth/
+.env
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/

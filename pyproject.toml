@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "antigravity-pool"
+version = "0.1.0"
+description = "Manage a pool of Google Antigravity OAuth accounts: refresh, quota, rotation"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Omni.labs" }]
+keywords = ["antigravity", "gemini", "oauth", "quota", "cliproxyapi"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX",
+]
+
+[project.scripts]
+antigravity-pool = "antigravity.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["antigravity*"]
