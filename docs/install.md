@@ -1,22 +1,16 @@
-# Instalasi di laptop (tanpa VPS)
+# Instalasi Satu-Bundle (Tanpa VPS)
 
-GravPool jalan **penuh di laptop lokal** — tidak butuh VPS.
-Kredensial OAuth publik sudah built-in, jadi tidak ada file config yang harus
-di-copy atau di-edit. Cukup Python 3.9+ dan satu command login.
+GravPool sekarang hadir dalam alur satu-bundle via script `bundle.py`. Proses ini otomatis mendownload CLIProxyAPI, mengatur login Google, dan membuatkan `config.yaml`. Semuanya jalan penuh di laptop lokal.
 
 **Yang kamu butuhkan:**
-
-| Prasyarat | Untuk apa |
-|---|---|
-| Python 3.9+ | jalankan pool tool (stdlib only, tanpa dependency) |
-| Akun Google (akses Antigravity) | login sekali, hasilkan auth file |
-| `cli-proxy-api` *(opsional)* | hanya untuk endpoint OpenAI-compatible |
+- Python 3.9+
+- Akun Google (akses Antigravity)
 
 ---
 
-## Cara tercepat (satu command)
+## Cara tercepat (1 Langkah)
 
-Setelah download/extract repo, tinggal:
+Setelah download/extract repo, tinggal jalankan script entry point:
 
 - **Windows:** double-click `install.bat`, atau:
   ```cmd
@@ -27,97 +21,45 @@ Setelah download/extract repo, tinggal:
   chmod +x install.sh && ./install.sh
   ```
 
-Script ini cek Python, lalu langsung buka browser untuk login Google.
-Ulangi untuk tiap akun yang mau ditambah.
+### Apa yang bundle ini lakukan?
+1. **Login Akun:** Membuka browser untuk otorisasi Google Antigravity dan menyimpan auth file di folder `auth/`.
+2. **Download Proxy:** Otomatis menarik binary `cli-proxy-api` terbaru ke dalam folder `bin/`.
+3. **Generate Config:** Membuat file `config.yaml` dengan setup standar (port 8317, key `sk-local`).
+
+*(Catatan: kamu bisa bypass login dengan `--no-login` atau bypass download proxy dengan `--no-proxy` jika menjalankan `python bundle.py` manual).*
 
 ---
 
-## Manual (tanpa script)
+## Cara Pakai
 
-### Windows
+Setelah instalasi selesai, kamu punya dua komponen utama:
 
-1. Download: `https://github.com/ghostedmyself/gravpool` → **Code → Download ZIP** → extract.
-2. Pastikan Python: `python --version` (kalau belum: python.org/downloads, centang *Add Python to PATH*).
-3. Login akun:
-   ```cmd
-   python -m gravpool.cli add-account --auth-dir auth
-   ```
-   Browser kebuka → login Google → consent → auth file tersimpan otomatis.
-   (Headless: tambah `--no-browser`, lalu buka URL yang dicetak.)
-4. Jalankan:
-   ```cmd
-   python -m gravpool.cli status --auth-dirs auth
-   python -m gravpool.cli quota  --auth-dirs auth
-   python -m gravpool.cli gui    --auth-dirs auth
-   ```
-   Dashboard: http://127.0.0.1:8390
-
-### macOS / Linux
-
+**1. Dashboard GravPool (Manajemen Akun/Kuota)**
+Jalankan di terminal:
 ```bash
-git clone https://github.com/ghostedmyself/gravpool.git
-cd gravpool
-
-# login akun (bisa diulang untuk banyak akun):
-python3 -m gravpool.cli add-account --auth-dir auth
-
-# jalankan:
-python3 -m gravpool.cli status --auth-dirs auth
-python3 -m gravpool.cli gui    --auth-dirs auth   # → http://127.0.0.1:8390
+python -m gravpool.cli gui --auth-dirs auth
 ```
+Akses di browser: http://127.0.0.1:8390
 
----
-
-## Kredensial OAuth (opsional)
-
-Kredensial publik Antigravity sudah **built-in**, jadi kamu tidak perlu
-copy/edit file. Kalau mau memakai client OAuth sendiri:
-
+**2. Endpoint OpenAI-Compatible (Proxy)**
+Buka terminal baru, jalankan:
 ```bash
-cp gravpool/_local_creds.py.example gravpool/_local_creds.py
-# isi CLIENT_ID + CLIENT_SECRET
+bin/cli-proxy-api --config config.yaml
 ```
-
-(atau export `ANTIGRAVITY_CLIENT_ID` / `ANTIGRAVITY_CLIENT_SECRET`)
-
----
-
-## Combo model (fallback otomatis)
-
-```bash
-python -m gravpool.cli combo add coding gemini-2.5-pro claude-sonnet-4-6
-python -m gravpool.cli combo resolve coding
-```
-
----
-
-## Opsional: endpoint OpenAI-compatible + OpenCode
-
-Kalau mau pakai OpenCode (atau klien OpenAI lain) langsung di laptop:
-
-1. Pasang `cli-proxy-api` (binary sesuai OS dari releases).
-2. Buat config:
-   ```yaml
-   host: 127.0.0.1
-   port: 8317
-   auth-dir: ./auth
-   api-keys: ["sk-local"]
-   ```
-3. Jalankan `cli-proxy-api --config config.yaml`
-4. Arahkan OpenCode (`examples/opencode.json`), env:
-   ```bash
-   export ANTIGRAVITY_BASE_URL="http://127.0.0.1:8317/v1"
-   export ANTIGRAVITY_API_KEY="sk-local"
-   ```
-
-Detail: [`docs/opencode.md`](opencode.md).
+Sekarang klien AI apa pun (seperti OpenCode) bisa connect ke:
+- **Base URL:** `http://127.0.0.1:8317/v1`
+- **API Key:** `sk-local`
 
 ---
 
 ## FAQ
 
-**Apakah butuh VPS sama sekali?** Tidak. Seluruh alur (login OAuth, refresh,
-kuota, rotasi, GUI, endpoint) jalan lokal.
+**Apakah butuh VPS sama sekali?**
+Tidak. Seluruh alur (login OAuth, refresh, kuota, rotasi, GUI, endpoint) jalan lokal.
 
-**Akun Antigravity-nya dari mana?** Akun Google biasa yang login ke
-Antigravity (Pro). `add-account` menghasilkan auth file otomatis.
+**Akun Antigravity-nya dari mana?**
+Akun Google biasa yang login ke Antigravity (Pro).
+
+**Mau tambah akun lagi?**
+Jalankan ulang `install.sh` / `install.bat`, atau manual:
+`python -m gravpool.cli add-account --auth-dir auth`

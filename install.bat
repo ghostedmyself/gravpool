@@ -1,44 +1,43 @@
 @echo off
-setlocal
 chcp 65001 >nul
-title GravPool installer
+setlocal
 
-echo.
-echo  ==========================================
-echo  GravPool - quick setup
-echo  ==========================================
-echo.
+cd /d "%~dp0"
 
-where python >nul 2>nul
-if %errorlevel%==0 goto :python_ok
-
-where py >nul 2>nul
-if %errorlevel%==0 (
-  set PY=py
-  goto :python_ok
+echo [Gravpool] Checking Python installation...
+python --version >nul 2>&1
+if %errorlevel% equ 0 (
+    set PY=python
+) else (
+    py --version >nul 2>&1
+    if %errorlevel% equ 0 (
+        set PY=py
+    ) else (
+        echo [ERROR] Python not found.
+        echo Please install Python 3.9+ from https://www.python.org/downloads/
+        echo IMPORTANT: Make sure to check "Add Python to PATH" during installation.
+        pause
+        exit /b 1
+    )
 )
 
-echo  [!] Python not found.
-echo      Install Python 3.9+ from https://www.python.org/downloads/
-echo      and tick "Add Python to PATH", then run this again.
-pause
-exit /b 1
-
-:python_ok
-if "%PY%"=="" set PY=python
-%PY% --version
-echo.
-echo  Account login will open in your browser.
-echo  Repeat this installer for every account you want to add.
-echo.
-%PY% -m gravpool.cli add-account --auth-dir auth
+echo [Gravpool] Running setup bundle...
+%PY% bundle.py
 if %errorlevel% neq 0 (
-  echo.
-  echo  [!] Login failed or cancelled.
-  pause
-  exit /b 1
+    echo [ERROR] Setup bundle failed.
+    pause
+    exit /b %errorlevel%
 )
+
 echo.
-echo  Account added. Dashboard: python -m gravpool.cli gui
-echo  Open http://127.0.0.1:8390
+echo ========================================================
+echo [SUCCESS] Gravpool setup completed!
+echo.
+echo Next steps:
+echo 1. Start Dashboard:  %PY% -m gravpool.cli gui --auth-dirs auth
+echo    (Visit http://127.0.0.1:8390)
+echo 2. Start Proxy API:  bin\cli-proxy-api.exe --config config.yaml
+echo    (API at http://127.0.0.1:8317/v1)
+echo ========================================================
+echo.
 pause

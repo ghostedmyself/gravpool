@@ -58,25 +58,31 @@ OpenAI-compatible di OpenCode atau tool apa pun.
 
 ---
 
-## ⚡ Quickstart
+## ⚡ Quickstart (Satu Bundle)
+
+Instalasi dan konfigurasi sekarang jadi satu command otomatis (login, download proxy, bikin config).
 
 ```bash
 # 1. clone (atau download ZIP)
 git clone https://github.com/ghostedmyself/gravpool.git
 cd gravpool
 
-# 2. login akun (browser consent; bisa diulang untuk banyak akun)
-python -m gravpool.cli add-account --auth-dir auth
-
-# 3. jalankan
-python -m gravpool.cli status --auth-dirs ./auth
-python -m gravpool.cli quota  --auth-dirs ./auth
-python -m gravpool.cli gui    --auth-dirs ./auth   # → http://127.0.0.1:8390
+# 2. jalankan bundle (download proxy + login akun + generate config.yaml)
+# Mac/Linux:
+./install.sh
+# Windows:
+install.bat
+# Atau via Python langsung:
+python bundle.py
 ```
+
+Setelah bundle selesai:
+- **Dashboard GravPool:** Buka tab baru, jalankan `python -m gravpool.cli gui --auth-dirs auth` (tersedia di http://127.0.0.1:8390)
+- **Endpoint Proxy:** Jalankan `bin/cli-proxy-api --config config.yaml` (tersedia di http://127.0.0.1:8317/v1)
 
 > Kredensial OAuth publik sudah **built-in** — tidak perlu copy/edit file creds.
 > Mau pakai client sendiri? export `ANTIGRAVITY_CLIENT_ID` / `ANTIGRAVITY_CLIENT_SECRET`
-> atau isi `gravpool/_local_creds.py`. Installer 1-command: `./install.sh` (Linux/Mac) / `install.bat` (Windows).
+> atau isi `gravpool/_local_creds.py`.
 
 ---
 
@@ -182,6 +188,20 @@ Satu file per akun, **CLIProxyAPI-compatible** (drop-in):
   "type":          "antigravity"          // identitas provider
 }
 ```
+
+---
+
+## 🌐 OpenAI-compatible endpoint
+
+Script `bundle.py` otomatis mengunduh binary CLIProxyAPI dan membuatkan `config.yaml`. Ini memungkinkan kamu pakai akun pool sebagai endpoint OpenAI-compatible standar.
+
+Cara pakainya:
+1. Jalankan proxy: `bin/cli-proxy-api --config config.yaml`
+2. Di client/tool AI-mu (seperti OpenCode, Cline, Cursor), set:
+   - **Base URL:** `http://127.0.0.1:8317/v1`
+   - **API Key:** `sk-local`
+
+> **Note:** GravPool mengatur manajemen akun, rotasi, dan kuota. CLIProxyAPI murni bertugas sebagai jembatan endpoint HTTP-nya. Keduanya sudah disatukan pengaturannya lewat `bundle.py`.
 
 ---
 

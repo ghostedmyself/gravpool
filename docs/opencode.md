@@ -1,56 +1,38 @@
-# Using the pool from OpenCode
+# Menggunakan GravPool dari OpenCode
 
-The pool doesn't expose Antigravity's raw API — it exposes an
-**OpenAI-compatible** endpoint through `cli-proxy-api`. OpenCode connects to
-it with the built-in `@ai-sdk/openai-compatible` provider. No plugin needed.
+Melalui setup satu-bundle, endpoint **OpenAI-compatible** sudah disiapkan untukmu lewat `cli-proxy-api`. OpenCode bisa connect langsung menggunakan provider bawaan `@ai-sdk/openai-compatible`.
 
-## One-time setup
+## Setup (Setelah Instalasi Bundle)
 
-1. Install OpenCode: `npm i -g opencode-ai@latest`
-2. Run CLIProxyAPI in front of your auth dir (see README "Pairing with
-   CLIProxyAPI"). It listens on `http://127.0.0.1:8317/v1`.
-3. Copy [`examples/opencode.json`](../examples/opencode.json) to your project
-   root (or merge its `provider` block into your existing config).
+1. Pastikan OpenCode terinstall: `npm i -g opencode-ai@latest`
+2. Pastikan proxy GravPool sudah berjalan di terminalmu:
+   ```bash
+   bin/cli-proxy-api --config config.yaml
+   ```
+   *(Proxy ini otomatis dibuat saat kamu menjalankan `install.sh` atau `bundle.py`).*
+3. Atur kredensial. Contohnya lewat environment variable agar aman:
+   ```bash
+   export ANTIGRAVITY_BASE_URL="http://127.0.0.1:8317/v1"
+   export ANTIGRAVITY_API_KEY="sk-local"
+   ```
 
-## Configure credentials
-
-The example reads from env vars so the key never lands in git:
-
-```bash
-export ANTIGRAVITY_BASE_URL="http://127.0.0.1:8317/v1"
-export ANTIGRAVITY_API_KEY="mrt_…"   # api-key from /opt/cliproxy-config.yaml
-```
-
-## Use it
+## Cara Pakai
 
 ```bash
-# one-shot
+# Sekali jalan
 opencode run "Explain this codebase" --model antigravity/claude-sonnet-4-6
 
-# interactive (pick the model from the TUI, or force it)
+# Mode interaktif (pilih model dari TUI)
 opencode --model antigravity/gemini-pro-agent
 ```
 
-## Available models
+## Model yang Tersedia
 
-Everything the proxy's `/v1/models` reports — as of writing:
-
+Semua model yang dilaporkan oleh proxy `/v1/models`. Contohnya:
 - `claude-sonnet-4-6`, `claude-opus-4-6-thinking`
-- `gemini-pro-agent`, `gemini-3-flash`, `gemini-3.1-pro-low`,
-  `gemini-3.1-flash-lite`, `gemini-3.5-flash-lite`, `gemini-3.6-flash-high`,
-  `gemini-3.7-flash-high`, `gemini-3.8-flash-high`, `gemini-3.1-flash-image`
+- `gemini-pro-agent`, `gemini-3.1-pro-low`, `gemini-3.7-flash-high`, dll.
 - `gpt-oss-120b-medium`
 
-Refresh the list with:
+## Kenapa ini berjalan lancar?
 
-```bash
-curl -s http://127.0.0.1:8317/v1/models -H "Authorization: Bearer $ANTIGRAVITY_API_KEY" | python3 -c "import sys,json; print('\n'.join(m['id'] for m in json.load(sys.stdin)['data']))"
-```
-
-## Why this works
-
-OpenCode's `@ai-sdk/openai-compatible` provider only needs `baseURL` +
-`apiKey`; CLIProxyAPI speaks chat completions on `/v1`, which the Antigravity
-(Cloud Code) backend serves through its OAuth accounts. Your repo's
-GravPool handles the account lifecycle (refresh/quota/rotation)
-behind the scenes — OpenCode just sees a normal OpenAI endpoint.
+OpenCode menggunakan `@ai-sdk/openai-compatible` yang hanya butuh `baseURL` dan `apiKey`. `cli-proxy-api` melayani permintaan chat completions di rute `/v1`. Di belakang layar, **GravPool** otomatis menangani rotasi akun, kuota, dan auto-refresh. Semuanya sudah terintegrasi dan siap pakai berkat alur satu-bundle.

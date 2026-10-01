@@ -1,20 +1,33 @@
 #!/usr/bin/env bash
-# GravPool quick setup — one command: check Python, login, done.
 set -euo pipefail
 
-if ! command -v python3 >/dev/null 2>&1; then
-  echo "[!] python3 not found. Install Python 3.9+ first, then run this again."
-  exit 1
+cd "$(dirname "$0")"
+
+echo "[Gravpool] Checking Python installation..."
+if command -v python3 >/dev/null 2>&1; then
+    PY="python3"
+elif command -v python >/dev/null 2>&1; then
+    PY="python"
+else
+    echo "[ERROR] Python 3 not found."
+    echo "Please install Python 3.9+ for your system."
+    exit 1
 fi
 
-python3 --version
-echo
-echo "Account login will open in your browser."
-echo "Repeat this script for every account you want to add."
-echo
+echo "[Gravpool] Running setup bundle..."
+if ! "$PY" bundle.py; then
+    echo "[ERROR] Setup bundle failed."
+    exit 1
+fi
 
-python3 -m gravpool.cli add-account --auth-dir auth
-
-echo
-echo "Account added."
-echo "Dashboard: python3 -m gravpool.cli gui  ->  http://127.0.0.1:8390"
+echo ""
+echo "========================================================"
+echo "[SUCCESS] Gravpool setup completed!"
+echo ""
+echo "Next steps:"
+echo "1. Start Dashboard:  $PY -m gravpool.cli gui --auth-dirs auth"
+echo "   (Visit http://127.0.0.1:8390)"
+echo "2. Start Proxy API:  bin/cli-proxy-api --config config.yaml"
+echo "   (API at http://127.0.0.1:8317/v1)"
+echo "========================================================"
+echo ""

@@ -5,6 +5,15 @@ Semua perubahan penting pada proyek ini dicatat di sini.
 Format berdasarkan [Keep a Changelog](https://keepachangelog.com/id/1.0.0/),
 dan proyek ini mengikuti [Semantic Versioning](https://semver.org/lang/id/).
 
+## [0.3.0] - 2026-10-01
+
+### Ditambahkan
+- Alur instalasi satu-bundle (`bundle.py`, `install.sh`, `install.bat`) yang menyatukan login akun, download `cli-proxy-api`, dan pembuatan `config.yaml` otomatis.
+- Opsi bypass `--no-login` dan `--no-proxy` pada script bundle.
+
+### Diubah
+- Pembaruan dokumentasi (README, install.md, opencode.md) menjadi flow instalasi 1-langkah dan penambahan referensi endpoint OpenAI-compatible lokal secara eksplisit.
+
 ## [0.2.0] - 2026-10-01
 
 ### Ditambahkan
