@@ -1,128 +1,180 @@
-# antigravity-pool
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white" alt="Python 3.9+">
+  <img src="https://img.shields.io/badge/stdlib%20only-✅-brightgreen" alt="stdlib only">
+  <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT">
+  <img src="https://img.shields.io/badge/status-verified%20live-3fb950" alt="verified live">
+</p>
 
-Turn **Google Antigravity Pro** accounts into a refreshable OAuth credential
-pool with live quota reporting — OpenAI/Claude/Gemini-compatible quota for
-free-ish Gemini 3 / Claude Sonnet access through the Antigravity (Cloud Code)
-backend.
+<h1 align="center">antigravity-pool</h1>
+<p align="center"><b>Kelola akun Google Antigravity Pro sebagai pool kredensial OAuth</b><br>
+refresh otomatis · monitoring kuota live · rotasi akun · web dashboard</p>
 
-Verified working against live accounts (Oct 2026).
+---
 
-## How it works
+## Apa ini?
 
+`antigravity-pool` mengubah satu atau beberapa akun **Google Antigravity Pro**
+menjadi *credential pool* yang bisa di-refresh, dimonitor kuotanya, dan
+dirotasi — lalu dipakai lewat endpoint OpenAI-compatible (CLIProxyAPI) di
+depan model Gemini 3 / Claude Sonnet / GPT.
+
+Tanpa dependency apa pun (pure Python stdlib). Teruji live terhadap akun Pro
+(Okt 2026).
+
+---
+
+## 📖 Daftar isi
+
+- [Alur kerja](#-alur-kerja)
+- [Quickstart](#-quickstart)
+- [Fitur](#-fitur)
+- [Struktur proyek](#-struktur-proyek)
+- [CLI reference](#-cli-reference)
+- [Schema auth file](#-schema-auth-file)
+- [Integrasi](#-integrasi)
+- [Catatan](#-catatan)
+
+---
+
+## 🔁 Alur kerja
+
+```mermaid
+flowchart LR
+    A["🔑 Google Account<br/><i>Antigravity Pro</i>"] -->|"OAuth consent<br/><code>--antigravity-login</code>"| B["<code>cli-proxy-api</code>"]
+    B --> C["<b>auth file</b><br/><code>antigravity-&lt;email&gt;.json</code>"]
+    C --> D["<b>antigravity-pool</b>"]
+    D --> E["refresh<br/><code>refresh_token → access_token</code>"]
+    D --> F["quota<br/><code>fetchAvailableModels</code>"]
+    D --> G["rotation<br/>round-robin"]
+    E --> H["🖥️ web GUI"]
+    F --> H
+    G --> H
+    F --> I["OpenAI-compatible<br/><code>/v1/models</code><br/>(via CLIProxyAPI)"]
+    I --> J["🤖 OpenCode / klien lain"]
 ```
-Google OAuth (project aicode-consumers)
-        │  refresh_token → access_token (ya29…)          oauth.py
-        ▼
-daily-cloudcode-pa.sandbox.googleapis.com
-        │  v1internal:fetchAvailableModels               quota.py
-        ▼
-per-account quota: {model: {remaining 0..1, resetTime}}
-```
 
-- **Auth files** are CLIProxyAPI-compatible `antigravity-<email>.json`
-  (drop-in: point `auth-dir` at the same directory).
-- **Refresh** is a plain `oauth2.googleapis.com/token` call with the public
-  embedded client credentials (same values the Antigravity IDE ships with).
-- **Interactive login** reuses the pool binary's built-in
-  `--antigravity-login` flag (see below), so you don't re-implement the OAuth
-  dance.
-- **Quota** comes from `fetchAvailableModels` — the same endpoint the IDE uses
-  to render its model quota bars.
+**Ringkasnya:** akun Google → token OAuth → disimpan sebagai JSON →
+pool ini yang ngurusin refresh + kuota + rotasi → dipakai lewat endpoint
+OpenAI-compatible di OpenCode atau tool apa pun.
 
-## Install
+---
+
+## ⚡ Quickstart
 
 ```bash
+# 1. clone
+git clone https://github.com/ghostedmyself/antigravity-pool.git
+cd antigravity-pool
+
+# 2. (opsional) install
 pip install -e .
-# or just: python -m antigravity.cli … (stdlib only, no deps)
-```
 
-Set up the OAuth client credentials (public app credentials, see Notes):
-
-```bash
+# 3. set kredensial OAuth (sekali)
 cp antigravity/_local_creds.py.example antigravity/_local_creds.py
-# edit it with the real ClientID/ClientSecret, or export
-# ANTIGRAVITY_CLIENT_ID / ANTIGRAVITY_CLIENT_SECRET instead
+#    isi ClientID + ClientSecret — nilai publik, lihat [Catatan](#-catatan)
+#    ATAU: export ANTIGRAVITY_CLIENT_ID / ANTIGRAVITY_CLIENT_SECRET
+
+# 4. sediakan auth file (copy dari VPS / login akun baru)
+#    scp root@VPS:/root/.cli-proxy-api/antigravity-*.json ./auth/
+#    ATAU: python -m antigravity.cli login-binary --binary /opt/cli-proxy-api
+
+# 5. jalankan
+python -m antigravity.cli status --auth-dirs ./auth
+python -m antigravity.cli quota  --auth-dirs ./auth
+python -m antigravity.cli gui    --auth-dirs ./auth   # → http://127.0.0.1:8390
 ```
 
-## Usage
+---
 
-```bash
-# pool overview (token state per account)
-python -m antigravity.cli status
+## ✨ Fitur
 
-# live quota for every account (worst model summary, or full JSON via --out)
-python -m antigravity.cli quota --out /var/www/ag_quota.json
+| Kategori | Fitur | Modul |
+|---|---|---|
+| 🔑 **OAuth** | refresh token otomatis, login akun baru, userinfo | `oauth.py` |
+| 📊 **Kuota** | `fetchAvailableModels` live, snapshot JSON, cache | `quota.py` |
+| 🔄 **Rotasi** | round-robin thread-safe, auto-skip akun mati, auto-refresh | `rotate.py` |
+| 💾 **Storage** | model auth file CLIProxyAPI-compatible, scan + expiry | `store.py` |
+| 🖥️ **GUI** | dashboard web zero-dep, quota bar + token chip + refresh 1-klik | `web.py` |
+| ⌨️ **CLI** | `status` / `quota` / `refresh` / `gui` / `login-binary` | `cli.py` |
 
-# refresh every expired access token in place
-python -m antigravity.cli refresh
+---
 
-# web dashboard (live quota bars + token state + one-click refresh)
-python -m antigravity.cli gui --host 127.0.0.1 --port 8390
-#   then open http://127.0.0.1:8390
+## 📁 Struktur proyek
 
-# add a new account (opens the Google consent flow via cli-proxy-api)
-python -m antigravity.cli login-binary --binary /opt/cli-proxy-api \
-    --config /opt/cliproxy-config.yaml
+```
+antigravity-pool/
+├── antigravity/                 # paket inti (stdlib only)
+│   ├── constants.py             #   OAuth client + endpoint (publik)
+│   ├── store.py                 #   model & scan auth file
+│   ├── oauth.py                 #   refresh / login / userinfo
+│   ├── quota.py                 #   fetchAvailableModels + snapshot
+│   ├── rotate.py                #   round-robin rotator
+│   ├── web.py                   #   dashboard web zero-dep
+│   ├── cli.py                   #   antarmuka command-line
+│   ├── _local_creds.py.example  #   template kredensial (GITIGNORED)
+├── examples/
+│   └── opencode.json            # config provider OpenCode siap pakai
+├── docs/
+│   └── opencode.md              # panduan integrasi OpenCode
+├── pyproject.toml               # metadata paket
+├── LICENSE                      # MIT
+└── README.md
 ```
 
-Auth dirs default to `/root/.cli-proxy-api*`; override with
-`--auth-dirs dir1 dir2`.
+---
 
-### Library use
+## 🛠️ CLI reference
 
-```python
-from antigravity.store import load_accounts
-from antigravity.oauth import refresh_account
-from antigravity.quota import pool_quota
-from antigravity.rotate import Rotator
+| Perintah | Fungsi |
+|---|---|
+| `status` | tampilkan state token tiap akun (ok / expired / disabled) |
+| `quota` | ringkasan kuota per akun; `--out file.json` untuk snapshot penuh |
+| `refresh` | refresh semua token yang expired |
+| `gui` | jalankan dashboard web (`--host` / `--port`) |
+| `login-binary` | tambah akun baru lewat flow login bawaan `cli-proxy-api` |
 
-accounts = load_accounts(["/root/.cli-proxy-api"])
-rot = Rotator(accounts)              # auto-refreshes + skips dead accounts
-acct = rot.next()                    # round-robin, thread-safe
-print(pool_quota([acct]))
-```
+Semua perintah menerima `--auth-dirs DIR [DIR ...]` untuk menunjuk lokasi
+auth file (default `/root/.cli-proxy-api*` di server).
 
-### Cron example
+---
 
-```cron
-# refresh tokens every 30 min, quota snapshot every 5 min
-*/30 * * * * python -m antigravity.cli refresh >> /var/log/ag-pool.log 2>&1
-*/5  * * * * python -m antigravity.cli quota --out /var/www/ag_quota.json >> /var/log/ag-pool.log 2>&1
-```
+## 📄 Schema auth file
 
-## Web GUI
+Satu file per akun, **CLIProxyAPI-compatible** (drop-in):
 
-`python -m antigravity.cli gui` serves a zero-dependency dashboard:
-
-- **token chips** per account (ok / expired / disabled)
-- **live quota bars** per model, sorted worst-first (green >50%, amber >20%, red ≤20%)
-- **one-click token refresh** (POST /api/refresh)
-- 30 s quota cache, 60 s auto-poll — bind stays on 127.0.0.1 by default
-
-Endpoints: `/` (page), `/api/status`, `/api/quota`, `/api/refresh`. The GUI
-exposes token *state* only — never token values — so it's safe to run
-locally; add your own auth if you ever bind it beyond localhost.
-
-## Auth file shape
-
-```json
+```jsonc
 {
-  "access_token": "ya29.…",
-  "disabled": false,
-  "email": "user@gmail.com",
-  "expired": "2026-10-01T13:01:06Z",
-  "expires_in": 3599,
-  "project_id": "aicode-consumers",
-  "refresh_token": "1//0g…",
-  "timestamp": 1790856067175,
-  "type": "antigravity"
+  "access_token":  "ya29.…",              // token akses (diputar oleh oauth.py)
+  "disabled":      false,                 // skip dari rotasi
+  "email":         "user@gmail.com",      // identitas akun
+  "expired":       "2026-10-01T13:01:06Z",// ISO8601 UTC, di-parse store.py
+  "expires_in":    3599,                  // detik
+  "project_id":    "aicode-consumers",    // project Google tetap
+  "refresh_token": "1//0g…",              // RAHASIA — jaga dir 0700
+  "timestamp":     1790856067175,         // epoch ms
+  "type":          "antigravity"          // identitas provider
 }
 ```
 
-## Pairing with CLIProxyAPI
+---
 
-`cli-proxy-api` (router-for-me/CLIProxyAPI) consumes these auth files
-directly and exposes an OpenAI-compatible endpoint in front of Antigravity:
+## 🔌 Integrasi
+
+### OpenCode
+
+Endpoint OpenAI-compatible dari CLIProxyAPI bisa langsung dipakai OpenCode:
+
+```bash
+opencode run "Explain this codebase" --model antigravity/claude-sonnet-4-6
+```
+
+Config lengkap di [`examples/opencode.json`](examples/opencode.json),
+panduan di [`docs/opencode.md`](docs/opencode.md).
+
+### CLIProxyAPI
+
+`cli-proxy-api` mengonsumsi auth file yang sama dan mengekspose
+`/v1/models` + chat completions:
 
 ```yaml
 # /opt/cliproxy-config.yaml
@@ -132,30 +184,34 @@ auth-dir: /root/.cli-proxy-api
 api-keys: ["sk-…"]
 ```
 
-This repo adds what the binary doesn't give you: standalone refresh, live
-quota snapshots, and rotation logic you can embed in your own tooling.
+### Library
 
-## Files
+```python
+from antigravity.store import load_accounts
+from antigravity.rotate import Rotator
+from antigravity.quota import pool_quota
 
-| path | purpose |
-|---|---|
-| `antigravity/constants.py` | OAuth client + endpoints (from upstream CLIProxyAPI, public embedded creds) |
-| `antigravity/store.py` | auth-file model, scanning, expiry logic |
-| `antigravity/oauth.py` | refresh / code-exchange / userinfo / save-new-account |
-| `antigravity/quota.py` | `fetchAvailableModels` client + snapshot writer |
-| `antigravity/rotate.py` | thread-safe round-robin with auto-refresh |
-| `antigravity/web.py` | zero-dependency web dashboard (status + quota + refresh) |
-| `antigravity/cli.py` | `status` / `quota` / `refresh` / `gui` / `login-binary` |
+accounts = load_accounts(["/root/.cli-proxy-api"])
+rot = Rotator(accounts)        # auto-refresh + skip akun mati
+acct = rot.next()              # round-robin, thread-safe
+print(pool_quota([acct]))
+```
 
-## Notes
+---
 
-- The client ID/secret are **public embedded app credentials** (they identify
-  the Antigravity app, not your account) — the same constants are shipped in
-  the open-source upstream. Your `refresh_token`s are the real secret; keep
-  auth dirs at `0700`.
-- `remainingFraction` is Antigravity's own quota metric (0..1 per model);
-  resets are rolling windows reported by `resetTime`.
+## 📝 Catatan
 
-## License
+- **Kredensial OAuth (ClientID/ClientSecret) bersifat publik** — nilai ini
+  embedded di IDE Antigravity dan dipublikasikan di upstream open-source
+  (router-for-me/CLIProxyAPI). Yang rahasia cuma `refresh_token` milikmu;
+  simpan auth dir dengan permission `0700`.
+- **`remainingFraction`** adalah metrik kuota asli Antigravity (0..1 per
+  model); reset-nya rolling window yang dilaporkan lewat `resetTime`.
+- **Login akun baru** butuh binary `cli-proxy-api` (flag `--antigravity-login`)
+  karena flow OAuth-nya dibangun di sana, bukan di-reimplementasi di sini.
 
-MIT
+---
+
+## 📄 License
+
+[MIT](LICENSE) © 2026 Omni.labs
