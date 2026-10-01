@@ -1,6 +1,6 @@
 # Instalasi di laptop (tanpa VPS)
 
-`antigravity-pool` jalan **penuh di laptop lokal** — tidak butuh VPS.
+GravPool jalan **penuh di laptop lokal** — tidak butuh VPS.
 Kredensial OAuth publik sudah built-in, jadi tidak ada file config yang harus
 di-copy atau di-edit. Cukup Python 3.9+ dan satu command login.
 
@@ -36,34 +36,34 @@ Ulangi untuk tiap akun yang mau ditambah.
 
 ### Windows
 
-1. Download: https://github.com/ghostedmyself/antigravity-pool → **Code → Download ZIP** → extract.
+1. Download: `https://github.com/ghostedmyself/gravpool` → **Code → Download ZIP** → extract.
 2. Pastikan Python: `python --version` (kalau belum: python.org/downloads, centang *Add Python to PATH*).
 3. Login akun:
    ```cmd
-   python -m antigravity.cli add-account --auth-dir auth
+   python -m gravpool.cli add-account --auth-dir auth
    ```
    Browser kebuka → login Google → consent → auth file tersimpan otomatis.
    (Headless: tambah `--no-browser`, lalu buka URL yang dicetak.)
 4. Jalankan:
    ```cmd
-   python -m antigravity.cli status --auth-dirs auth
-   python -m antigravity.cli quota  --auth-dirs auth
-   python -m antigravity.cli gui    --auth-dirs auth
+   python -m gravpool.cli status --auth-dirs auth
+   python -m gravpool.cli quota  --auth-dirs auth
+   python -m gravpool.cli gui    --auth-dirs auth
    ```
    Dashboard: http://127.0.0.1:8390
 
 ### macOS / Linux
 
 ```bash
-git clone https://github.com/ghostedmyself/antigravity-pool.git
-cd antigravity-pool
+git clone https://github.com/ghostedmyself/gravpool.git
+cd gravpool
 
 # login akun (bisa diulang untuk banyak akun):
-python -m antigravity.cli add-account --auth-dir auth
+python3 -m gravpool.cli add-account --auth-dir auth
 
 # jalankan:
-python -m antigravity.cli status --auth-dirs auth
-python -m antigravity.cli gui    --auth-dirs auth   # → http://127.0.0.1:8390
+python3 -m gravpool.cli status --auth-dirs auth
+python3 -m gravpool.cli gui    --auth-dirs auth   # → http://127.0.0.1:8390
 ```
 
 ---
@@ -74,7 +74,7 @@ Kredensial publik Antigravity sudah **built-in**, jadi kamu tidak perlu
 copy/edit file. Kalau mau memakai client OAuth sendiri:
 
 ```bash
-cp antigravity/_local_creds.py.example antigravity/_local_creds.py
+cp gravpool/_local_creds.py.example gravpool/_local_creds.py
 # isi CLIENT_ID + CLIENT_SECRET
 ```
 
@@ -85,8 +85,8 @@ cp antigravity/_local_creds.py.example antigravity/_local_creds.py
 ## Combo model (fallback otomatis)
 
 ```bash
-python -m antigravity.cli combo add coding gemini-2.5-pro claude-sonnet-4-6
-python -m antigravity.cli combo resolve coding
+python -m gravpool.cli combo add coding gemini-2.5-pro claude-sonnet-4-6
+python -m gravpool.cli combo resolve coding
 ```
 
 ---

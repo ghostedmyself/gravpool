@@ -52,5 +52,5 @@ curl -s http://127.0.0.1:8317/v1/models -H "Authorization: Bearer $ANTIGRAVITY_A
 OpenCode's `@ai-sdk/openai-compatible` provider only needs `baseURL` +
 `apiKey`; CLIProxyAPI speaks chat completions on `/v1`, which the Antigravity
 (Cloud Code) backend serves through its OAuth accounts. Your repo's
-`antigravity-pool` handles the account lifecycle (refresh/quota/rotation)
+GravPool handles the account lifecycle (refresh/quota/rotation)
 behind the scenes — OpenCode just sees a normal OpenAI endpoint.

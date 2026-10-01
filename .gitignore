@@ -1,6 +1,6 @@
 # never commit credentials
 antigravity-*.json
-antigravity/_local_creds.py
+gravpool/_local_creds.py
 *.json.tmp
 auth/
 .env

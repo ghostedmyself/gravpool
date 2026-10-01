@@ -1,11 +1,11 @@
 @echo off
 setlocal
 chcp 65001 >nul
-title antigravity-pool installer
+title GravPool installer
 
 echo.
 echo  ==========================================
-echo  antigravity-pool - quick setup
+echo  GravPool - quick setup
 echo  ==========================================
 echo.
 
@@ -31,7 +31,7 @@ echo.
 echo  Account login will open in your browser.
 echo  Repeat this installer for every account you want to add.
 echo.
-%PY% -m antigravity.cli add-account --auth-dir auth
+%PY% -m gravpool.cli add-account --auth-dir auth
 if %errorlevel% neq 0 (
   echo.
   echo  [!] Login failed or cancelled.
@@ -39,6 +39,6 @@ if %errorlevel% neq 0 (
   exit /b 1
 )
 echo.
-echo  Account added. Dashboard: python -m antigravity.cli gui
+echo  Account added. Dashboard: python -m gravpool.cli gui
 echo  Open http://127.0.0.1:8390
 pause

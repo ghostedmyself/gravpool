@@ -1,4 +1,4 @@
-"""antigravity-pool — manage a pool of Google Antigravity OAuth accounts.
+"""gravpool — manage a pool of Google Antigravity OAuth accounts.
 
 Turns Antigravity Pro accounts (OAuth via project ``aicode-consumers``) into a
 refreshable credential pool with live quota reporting. Designed to sit in

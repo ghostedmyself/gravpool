@@ -8,11 +8,11 @@ import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import TYPE_CHECKING, Optional
 
-from antigravity import constants
-from antigravity.oauth import build_auth_url, exchange_code, save_new_account
+from . import constants
+from .oauth import build_auth_url, exchange_code, save_new_account
 
 if TYPE_CHECKING:
-    from antigravity.store import AuthAccount
+    from .store import AuthAccount
 
 class CallbackHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# antigravity-pool quick setup — one command: check Python, login, done.
+# GravPool quick setup — one command: check Python, login, done.
 set -euo pipefail
 
 if ! command -v python3 >/dev/null 2>&1; then
@@ -13,8 +13,8 @@ echo "Account login will open in your browser."
 echo "Repeat this script for every account you want to add."
 echo
 
-python3 -m antigravity.cli add-account --auth-dir auth
+python3 -m gravpool.cli add-account --auth-dir auth
 
 echo
 echo "Account added."
-echo "Dashboard: python3 -m antigravity.cli gui  ->  http://127.0.0.1:8390"
+echo "Dashboard: python3 -m gravpool.cli gui  ->  http://127.0.0.1:8390"

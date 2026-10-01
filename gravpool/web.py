@@ -1,7 +1,7 @@
 """Zero-dependency web GUI for the antigravity pool.
 
 Run:
-    python -m antigravity.cli gui --host 127.0.0.1 --port 8390
+    python -m gravpool.cli gui --host 127.0.0.1 --port 8390
 
 Endpoints:
     GET  /            dashboard page
@@ -377,7 +377,7 @@ setInterval(loadStatus, 120000);
 
 def serve(auth_dirs: list[str], host: str = "127.0.0.1", port: int = 8390) -> None:
     httpd = ThreadingHTTPServer((host, port), _make_handler(auth_dirs))
-    print(f"antigravity-pool GUI -> http://{host}:{port}")
+    print(f"GravPool -> http://{host}:{port}")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

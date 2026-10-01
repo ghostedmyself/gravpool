@@ -2,9 +2,9 @@
 
 Client ID/secret are the public, embedded credentials used by the Antigravity
 IDE itself — they identify the app, not the account. At runtime they load from
-(1) environment variables, or (2) a gitignored ``antigravity/_local_creds.py``.
-See ``antigravity/_local_creds.py.example`` and run
-``cp antigravity/_local_creds.py.example antigravity/_local_creds.py`` to set
+(1) environment variables, or (2) a gitignored ``gravpool/_local_creds.py``.
+See ``gravpool/_local_creds.py.example`` and run
+``cp gravpool/_local_creds.py.example gravpool/_local_creds.py`` to set
 them up; the values match the open-source upstream CLIProxyAPI
 ``internal/auth/antigravity/constants.go``.
 """

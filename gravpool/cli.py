@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""antigravity-pool CLI.
+"""gravpool CLI.
 
 Usage:
-  python -m antigravity.cli status  [--auth-dirs DIR ...]        # pool overview
-  python -m antigravity.cli quota   [--auth-dirs DIR ...] [--out FILE]
-  python -m antigravity.cli refresh [--auth-dirs DIR ...]        # refresh all
-  python -m antigravity.cli gui     [--host H] [--port P]     # web dashboard
-  python -m antigravity.cli login-binary [--binary PATH] [--config PATH]
+  python -m gravpool.cli status  [--auth-dirs DIR ...]        # pool overview
+  python -m gravpool.cli quota   [--auth-dirs DIR ...] [--out FILE]
+  python -m gravpool.cli refresh [--auth-dirs DIR ...]        # refresh all
+  python -m gravpool.cli gui     [--host H] [--port P]     # web dashboard
+  python -m gravpool.cli login-binary [--binary PATH] [--config PATH]
                                                         # run --antigravity-login
 """
 from __future__ import annotations
@@ -162,7 +162,7 @@ def cmd_gui(args) -> int:
 
 
 def main(argv=None) -> int:
-    p = argparse.ArgumentParser(prog="antigravity-pool",
+    p = argparse.ArgumentParser(prog="gravpool",
                                 description="Manage a pool of Google Antigravity OAuth accounts")
     sub = p.add_subparsers(dest="cmd", required=True)
 

@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "antigravity-pool"
+name = "gravpool"
 version = "0.2.0"
 description = "Manage a pool of Google Antigravity accounts: OAuth refresh, live quota, combo routing, and web dashboard"
 readme = "README.md"
@@ -18,7 +18,7 @@ classifiers = [
 ]
 
 [project.scripts]
-antigravity-pool = "antigravity.cli:main"
+gravpool = "gravpool.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["antigravity*"]
+include = ["gravpool*"]

@@ -5,7 +5,7 @@
   <img src="https://img.shields.io/badge/status-verified%20live-3fb950" alt="verified live">
 </p>
 
-<h1 align="center">antigravity-pool</h1>
+<h1 align="center">GravPool</h1>
 <p align="center"><b>Kelola akun Google Antigravity Pro sebagai pool kredensial OAuth</b><br>
 refresh otomatis · monitoring kuota live · rotasi akun · web dashboard</p>
 
@@ -13,7 +13,7 @@ refresh otomatis · monitoring kuota live · rotasi akun · web dashboard</p>
 
 ## Apa ini?
 
-`antigravity-pool` mengubah satu atau beberapa akun **Google Antigravity Pro**
+GravPool mengubah satu atau beberapa akun **Google Antigravity Pro**
 menjadi *credential pool* yang bisa di-refresh, dimonitor kuotanya, dan
 dirotasi — lalu dipakai lewat endpoint OpenAI-compatible (CLIProxyAPI) di
 depan model Gemini 3 / Claude Sonnet / GPT.
@@ -40,9 +40,8 @@ Tanpa dependency apa pun (pure Python stdlib). Teruji live terhadap akun Pro
 
 ```mermaid
 flowchart LR
-    A["🔑 Google Account<br/><i>Antigravity Pro</i>"] -->|"OAuth consent<br/><code>--antigravity-login</code>"| B["<code>cli-proxy-api</code>"]
-    B --> C["<b>auth file</b><br/><code>antigravity-&lt;email&gt;.json</code>"]
-    C --> D["<b>antigravity-pool</b>"]
+    A["🔑 Google Account<br/><i>Antigravity Pro</i>"] -->|"OAuth consent<br/><code>add-account</code>"| C["<b>auth file</b><br/><code>antigravity-&lt;email&gt;.json</code>"]
+    C --> D["<b>GravPool</b>"]
     D --> E["refresh<br/><code>refresh_token → access_token</code>"]
     D --> F["quota<br/><code>fetchAvailableModels</code>"]
     D --> G["rotation<br/>round-robin"]
@@ -63,21 +62,21 @@ OpenAI-compatible di OpenCode atau tool apa pun.
 
 ```bash
 # 1. clone (atau download ZIP)
-git clone https://github.com/ghostedmyself/antigravity-pool.git
-cd antigravity-pool
+git clone https://github.com/ghostedmyself/gravpool.git
+cd gravpool
 
 # 2. login akun (browser consent; bisa diulang untuk banyak akun)
-python -m antigravity.cli add-account --auth-dir auth
+python -m gravpool.cli add-account --auth-dir auth
 
 # 3. jalankan
-python -m antigravity.cli status --auth-dirs ./auth
-python -m antigravity.cli quota  --auth-dirs ./auth
-python -m antigravity.cli gui    --auth-dirs ./auth   # → http://127.0.0.1:8390
+python -m gravpool.cli status --auth-dirs ./auth
+python -m gravpool.cli quota  --auth-dirs ./auth
+python -m gravpool.cli gui    --auth-dirs ./auth   # → http://127.0.0.1:8390
 ```
 
 > Kredensial OAuth publik sudah **built-in** — tidak perlu copy/edit file creds.
 > Mau pakai client sendiri? export `ANTIGRAVITY_CLIENT_ID` / `ANTIGRAVITY_CLIENT_SECRET`
-> atau isi `antigravity/_local_creds.py`. Installer 1-command: `./install.sh` (Linux/Mac) / `install.bat` (Windows).
+> atau isi `gravpool/_local_creds.py`. Installer 1-command: `./install.sh` (Linux/Mac) / `install.bat` (Windows).
 
 ---
 
@@ -98,8 +97,8 @@ python -m antigravity.cli gui    --auth-dirs ./auth   # → http://127.0.0.1:839
 ## 📁 Struktur proyek
 
 ```
-antigravity-pool/
-├── antigravity/                 # paket inti (stdlib only)
+gravpool/
+├── gravpool/                    # paket inti (stdlib only)
 │   ├── constants.py             #   OAuth client + endpoint (publik, built-in)
 │   ├── store.py                 #   model & scan auth file
 │   ├── oauth.py                 #   refresh / login / userinfo
@@ -141,24 +140,24 @@ auth file (default `/root/.cli-proxy-api*` di server).
 
 ```bash
 # 1 command, langsung buka browser untuk consent Google:
-python -m antigravity.cli add-account
+python -m gravpool.cli add-account
 
 # kalau di server headless (browser tidak bisa dibuka otomatis):
-python -m antigravity.cli add-account --no-browser   # print URL, paste manual
+python -m gravpool.cli add-account --no-browser   # print URL, paste manual
 ```
 
 ### Combo (virtual model dengan fallback otomatis)
 
 ```bash
 # buat combo fallback: kalau gemini-3-pro kuota habis → claude-sonnet-4-6
-python -m antigravity.cli combo add main gemini-3-pro claude-sonnet-4-6
+python -m gravpool.cli combo add main gemini-3-pro claude-sonnet-4-6
 
 # lihat daftar + resolve terhadap kuota live:
-python -m antigravity.cli combo list
-python -m antigravity.cli combo resolve main
+python -m gravpool.cli combo list
+python -m gravpool.cli combo resolve main
 
 # hapus combo:
-python -m antigravity.cli combo rm main
+python -m gravpool.cli combo rm main
 ```
 
 `kind` bisa `fallback` (coba berurutan, pindah saat kuota habis) atau `fusion`
@@ -215,9 +214,9 @@ api-keys: ["sk-…"]
 ### Library
 
 ```python
-from antigravity.store import load_accounts
-from antigravity.rotate import Rotator
-from antigravity.quota import pool_quota
+from gravpool.store import load_accounts
+from gravpool.rotate import Rotator
+from gravpool.quota import pool_quota
 
 accounts = load_accounts(["/root/.cli-proxy-api"])
 rot = Rotator(accounts)        # auto-refresh + skip akun mati
@@ -235,8 +234,8 @@ print(pool_quota([acct]))
   simpan auth dir dengan permission `0700`.
 - **`remainingFraction`** adalah metrik kuota asli Antigravity (0..1 per
   model); reset-nya rolling window yang dilaporkan lewat `resetTime`.
-- **Login akun baru** butuh binary `cli-proxy-api` (flag `--antigravity-login`)
-  karena flow OAuth-nya dibangun di sana, bukan di-reimplementasi di sini.
+- **Login akun baru** pakai `add-account` (flow OAuth dibangun langsung di
+  `login_flow.py`; tidak butuh binary eksternal).
 
 ---
 

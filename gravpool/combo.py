@@ -40,7 +40,7 @@ class Combo:
 
 def combo_dir() -> str:
     """Return the combo config directory, creating it if necessary."""
-    d = Path.home() / ".antigravity-pool"
+    d = Path.home() / ".gravpool"
     d.mkdir(parents=True, exist_ok=True)
     os.chmod(str(d), 0o700)
     return str(d)
