@@ -1,108 +1,103 @@
 # Instalasi di laptop (tanpa VPS)
 
-`antigravity-pool` bisa jalan **penuh di laptop lokal** — tidak butuh VPS.
-Satu-satunya syarat adalah punya **auth file** (kredensial OAuth akun
-Antigravity), dan auth file itu bisa dibuat langsung di laptop pakai browser
-(justru lebih gampang daripada di server headless).
+`antigravity-pool` jalan **penuh di laptop lokal** — tidak butuh VPS.
+Kredensial OAuth publik sudah built-in, jadi tidak ada file config yang harus
+di-copy atau di-edit. Cukup Python 3.9+ dan satu command login.
 
 **Yang kamu butuhkan:**
 
 | Prasyarat | Untuk apa |
 |---|---|
-| Python 3.9+ | jalankan pool tool (stdlib only) |
-| auth file (`antigravity-*.json`) | kredensial akun — login baru **atau** copy dari VPS |
-| `cli-proxy-api` *(opsional)* | tambah akun baru & endpoint OpenAI-compatible |
+| Python 3.9+ | jalankan pool tool (stdlib only, tanpa dependency) |
+| Akun Google (akses Antigravity) | login sekali, hasilkan auth file |
+| `cli-proxy-api` *(opsional)* | hanya untuk endpoint OpenAI-compatible |
 
 ---
 
-## Windows
+## Cara tercepat (satu command)
 
-### 1. Download repo
+Setelah download/extract repo, tinggal:
 
-Paling gampang tanpa git: buka
-`https://github.com/ghostedmyself/antigravity-pool` → **Code → Download ZIP**
-→ extract. (Atau `git clone` jika git sudah ada.)
+- **Windows:** double-click `install.bat`, atau:
+  ```cmd
+  install.bat
+  ```
+- **macOS / Linux:**
+  ```bash
+  chmod +x install.sh && ./install.sh
+  ```
 
-### 2. Pastikan Python terpasang
-
-```cmd
-python --version
-```
-
-Kalau belum ada: https://www.python.org/downloads/ → centang *"Add Python to PATH"* saat install.
-
-### 3. Setup kredensial OAuth (sekali)
-
-```cmd
-cd antigravity-pool
-copy antigravity\_local_creds.py.example antigravity\_local_creds.py
-```
-
-Edit `antigravity\_local_creds.py`, isi `CLIENT_ID` dan `CLIENT_SECRET`.
-(Nilai-nya publik — lihat README bagian **Catatan**.)
-
-### 4. Siapkan auth file
-
-**Opsi A — login akun baru di laptop (disarankan, TANPA binary CLIProxyAPI):**
-
-```cmd
-python -m antigravity.cli add-account
-```
-
-Browser laptop kebuka sendiri → login Google → consent → auth file
-tersimpan otomatis di `auth\antigravity-<email>.json`.
-
-- Bisa diulang untuk banyak akun; semuanya masuk pool yang sama.
-- Kalau browser tidak bisa dibuka otomatis, pakai `--no-browser` lalu
-  buka URL yang dicetak konsol secara manual.
-
-**Opsi B — copy dari VPS:**
-
-```cmd
-scp root@VPS-IP:/root/.cli-proxy-api/antigravity-*.json auth\
-```
-
-### 5. Jalankan
-
-```cmd
-python -m antigravity.cli status --auth-dirs auth
-python -m antigravity.cli quota  --auth-dirs auth
-python -m antigravity.cli gui    --auth-dirs auth
-```
-
-Buka `http://127.0.0.1:8390` di browser untuk dashboard.
+Script ini cek Python, lalu langsung buka browser untuk login Google.
+Ulangi untuk tiap akun yang mau ditambah.
 
 ---
 
-## macOS / Linux
+## Manual (tanpa script)
+
+### Windows
+
+1. Download: https://github.com/ghostedmyself/antigravity-pool → **Code → Download ZIP** → extract.
+2. Pastikan Python: `python --version` (kalau belum: python.org/downloads, centang *Add Python to PATH*).
+3. Login akun:
+   ```cmd
+   python -m antigravity.cli add-account --auth-dir auth
+   ```
+   Browser kebuka → login Google → consent → auth file tersimpan otomatis.
+   (Headless: tambah `--no-browser`, lalu buka URL yang dicetak.)
+4. Jalankan:
+   ```cmd
+   python -m antigravity.cli status --auth-dirs auth
+   python -m antigravity.cli quota  --auth-dirs auth
+   python -m antigravity.cli gui    --auth-dirs auth
+   ```
+   Dashboard: http://127.0.0.1:8390
+
+### macOS / Linux
 
 ```bash
 git clone https://github.com/ghostedmyself/antigravity-pool.git
 cd antigravity-pool
-pip install -e .                              # opsional
 
-cp antigravity/_local_creds.py.example antigravity/_local_creds.py
-# isi CLIENT_ID + CLIENT_SECRET
+# login akun (bisa diulang untuk banyak akun):
+python -m antigravity.cli add-account --auth-dir auth
 
-# auth file: login akun baru di browser, atau copy dari VPS
-python -m antigravity.cli add-account --auth-dirs ./auth
-#   (browser kebuka; kalau headless, tambah --no-browser lalu buka URL manual)
-scp root@VPS-IP:/root/.cli-proxy-api/antigravity-*.json ./auth/   # opsi copy
-
-python -m antigravity.cli status --auth-dirs ./auth
-python -m antigravity.cli gui    --auth-dirs ./auth
+# jalankan:
+python -m antigravity.cli status --auth-dirs auth
+python -m antigravity.cli gui    --auth-dirs auth   # → http://127.0.0.1:8390
 ```
 
 ---
 
-## Opsional: endpoint OpenAI-compatible + OpenCode di laptop
+## Kredensial OAuth (opsional)
+
+Kredensial publik Antigravity sudah **built-in**, jadi kamu tidak perlu
+copy/edit file. Kalau mau memakai client OAuth sendiri:
+
+```bash
+cp antigravity/_local_creds.py.example antigravity/_local_creds.py
+# isi CLIENT_ID + CLIENT_SECRET
+```
+
+(atau export `ANTIGRAVITY_CLIENT_ID` / `ANTIGRAVITY_CLIENT_SECRET`)
+
+---
+
+## Combo model (fallback otomatis)
+
+```bash
+python -m antigravity.cli combo add coding gemini-2.5-pro claude-sonnet-4-6
+python -m antigravity.cli combo resolve coding
+```
+
+---
+
+## Opsional: endpoint OpenAI-compatible + OpenCode
 
 Kalau mau pakai OpenCode (atau klien OpenAI lain) langsung di laptop:
 
 1. Pasang `cli-proxy-api` (binary sesuai OS dari releases).
 2. Buat config:
    ```yaml
-   # config.yaml
    host: 127.0.0.1
    port: 8317
    auth-dir: ./auth
@@ -114,21 +109,15 @@ Kalau mau pakai OpenCode (atau klien OpenAI lain) langsung di laptop:
    export ANTIGRAVITY_BASE_URL="http://127.0.0.1:8317/v1"
    export ANTIGRAVITY_API_KEY="sk-local"
    ```
-5. Pakai:
-   ```bash
-   opencode run "..." --model antigravity/claude-sonnet-4-6
-   ```
 
-Detail selengkapnya: [`docs/opencode.md`](opencode.md).
+Detail: [`docs/opencode.md`](opencode.md).
 
 ---
 
 ## FAQ
 
 **Apakah butuh VPS sama sekali?** Tidak. Seluruh alur (login OAuth, refresh,
-kuota, rotasi, GUI, endpoint) jalan lokal. VPS cuma dipakai kalau kamu ingin
-auth file yang sudah ada di server dipakai dari mana pun tanpa copy.
+kuota, rotasi, GUI, endpoint) jalan lokal.
 
 **Akun Antigravity-nya dari mana?** Akun Google biasa yang login ke
-Antigravity (Pro). Login via `--antigravity-login` menghasilkan auth file
-secara otomatis.
+Antigravity (Pro). `add-account` menghasilkan auth file otomatis.

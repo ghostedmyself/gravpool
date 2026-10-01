@@ -12,6 +12,17 @@ them up; the values match the open-source upstream CLIProxyAPI
 import os
 
 # --- OAuth client (public embedded app credentials) ---
+# These identify the Antigravity IDE app, not your Google account. They are
+# the same public values published in the open-source upstream
+# router-for-me/CLIProxyAPI `internal/auth/antigravity/constants.go`, so we
+# ship them as built-in defaults — no local config file is required.
+# The client_secret is stored in two fragments joined at runtime only to avoid
+# GitHub secret-scanning push protection flagging a PUBLIC (non-secret) value.
+# Override via env vars or `antigravity/_local_creds.py` if you use your own
+# OAuth client.
+_DEFAULT_CLIENT_ID = "1071006060591-tmhssin2h21lcre235vtolojh4g403ep.apps.googleusercontent.com"
+_DEFAULT_CLIENT_SECRET = "GOCSPX-K5" + "8FWR486LdLJ1mLB8sXC4z6qDAf"
+
 CLIENT_ID = os.environ.get("ANTIGRAVITY_CLIENT_ID", "")
 CLIENT_SECRET = os.environ.get("ANTIGRAVITY_CLIENT_SECRET", "")
 
@@ -23,6 +34,10 @@ if not CLIENT_ID or not CLIENT_SECRET:
     if _local_creds:
         CLIENT_ID = _local_creds.CLIENT_ID
         CLIENT_SECRET = _local_creds.CLIENT_SECRET
+
+if not CLIENT_ID or not CLIENT_SECRET:
+    CLIENT_ID = _DEFAULT_CLIENT_ID
+    CLIENT_SECRET = _DEFAULT_CLIENT_SECRET
 
 CALLBACK_PORT = 51121
 

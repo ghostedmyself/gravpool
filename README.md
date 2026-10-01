@@ -62,27 +62,22 @@ OpenAI-compatible di OpenCode atau tool apa pun.
 ## ⚡ Quickstart
 
 ```bash
-# 1. clone
+# 1. clone (atau download ZIP)
 git clone https://github.com/ghostedmyself/antigravity-pool.git
 cd antigravity-pool
 
-# 2. (opsional) install
-pip install -e .
+# 2. login akun (browser consent; bisa diulang untuk banyak akun)
+python -m antigravity.cli add-account --auth-dir auth
 
-# 3. set kredensial OAuth (sekali)
-cp antigravity/_local_creds.py.example antigravity/_local_creds.py
-#    isi ClientID + ClientSecret — nilai publik, lihat [Catatan](#-catatan)
-#    ATAU: export ANTIGRAVITY_CLIENT_ID / ANTIGRAVITY_CLIENT_SECRET
-
-# 4. sediakan auth file (copy dari VPS / login akun baru)
-#    scp root@VPS:/root/.cli-proxy-api/antigravity-*.json ./auth/
-#    ATAU: python -m antigravity.cli login-binary --binary /opt/cli-proxy-api
-
-# 5. jalankan
+# 3. jalankan
 python -m antigravity.cli status --auth-dirs ./auth
 python -m antigravity.cli quota  --auth-dirs ./auth
 python -m antigravity.cli gui    --auth-dirs ./auth   # → http://127.0.0.1:8390
 ```
+
+> Kredensial OAuth publik sudah **built-in** — tidak perlu copy/edit file creds.
+> Mau pakai client sendiri? export `ANTIGRAVITY_CLIENT_ID` / `ANTIGRAVITY_CLIENT_SECRET`
+> atau isi `antigravity/_local_creds.py`. Installer 1-command: `./install.sh` (Linux/Mac) / `install.bat` (Windows).
 
 ---
 
@@ -105,7 +100,7 @@ python -m antigravity.cli gui    --auth-dirs ./auth   # → http://127.0.0.1:839
 ```
 antigravity-pool/
 ├── antigravity/                 # paket inti (stdlib only)
-│   ├── constants.py             #   OAuth client + endpoint (publik)
+│   ├── constants.py             #   OAuth client + endpoint (publik, built-in)
 │   ├── store.py                 #   model & scan auth file
 │   ├── oauth.py                 #   refresh / login / userinfo
 │   ├── login_flow.py            #   login 1-command (browser callback)
@@ -114,7 +109,8 @@ antigravity-pool/
 │   ├── rotate.py                #   round-robin rotator
 │   ├── web.py                   #   dashboard web zero-dep
 │   ├── cli.py                   #   antarmuka command-line
-│   ├── _local_creds.py.example  #   template kredensial (GITIGNORED)
+│   ├── _local_creds.py.example  #   template kredensial (opsional, GITIGNORED)
+├── install.sh / install.bat     # installer 1-command (cek Python + login)
 ├── examples/
 │   └── opencode.json            # config provider OpenCode siap pakai
 ├── docs/
