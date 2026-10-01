@@ -116,10 +116,13 @@ gravpool/
 │   ├── cli.py                   #   antarmuka command-line
 │   ├── _local_creds.py.example  #   template kredensial (opsional, GITIGNORED)
 ├── install.sh / install.bat     # installer 1-command (cek Python + login)
+├── bundle.py                    # one-command bundle (login + download proxy + config)
 ├── examples/
 │   └── opencode.json            # config provider OpenCode siap pakai
 ├── docs/
+│   ├── install.md               # panduan instalasi satu-bundle
 │   └── opencode.md              # panduan integrasi OpenCode
+├── CHANGELOG.md                 # riwayat perubahan (Keep a Changelog)
 ├── pyproject.toml               # metadata paket
 ├── LICENSE                      # MIT
 └── README.md
