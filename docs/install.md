@@ -43,15 +43,18 @@ Edit `antigravity\_local_creds.py`, isi `CLIENT_ID` dan `CLIENT_SECRET`.
 
 ### 4. Siapkan auth file
 
-**Opsi A — login akun baru di laptop (disarankan):**
+**Opsi A — login akun baru di laptop (disarankan, TANPA binary CLIProxyAPI):**
 
-1. Download binary: https://github.com/router-for-me/CLIProxyAPI/releases →
-   `CLIProxyAPI_*_windows_amd64.zip` → extract
-2. Jalankan flow login:
-   ```cmd
-   cli-proxy-api.exe --config config.yaml --antigravity-login
-   ```
-   Browser kebuka → login Google → consent → auth file tersimpan otomatis.
+```cmd
+python -m antigravity.cli add-account
+```
+
+Browser laptop kebuka sendiri → login Google → consent → auth file
+tersimpan otomatis di `auth\antigravity-<email>.json`.
+
+- Bisa diulang untuk banyak akun; semuanya masuk pool yang sama.
+- Kalau browser tidak bisa dibuka otomatis, pakai `--no-browser` lalu
+  buka URL yang dicetak konsol secara manual.
 
 **Opsi B — copy dari VPS:**
 
@@ -81,8 +84,10 @@ pip install -e .                              # opsional
 cp antigravity/_local_creds.py.example antigravity/_local_creds.py
 # isi CLIENT_ID + CLIENT_SECRET
 
-# auth file: login baru (binary mac/linux dari releases) atau copy dari VPS
-scp root@VPS-IP:/root/.cli-proxy-api/antigravity-*.json ./auth/
+# auth file: login akun baru di browser, atau copy dari VPS
+python -m antigravity.cli add-account --auth-dirs ./auth
+#   (browser kebuka; kalau headless, tambah --no-browser lalu buka URL manual)
+scp root@VPS-IP:/root/.cli-proxy-api/antigravity-*.json ./auth/   # opsi copy
 
 python -m antigravity.cli status --auth-dirs ./auth
 python -m antigravity.cli gui    --auth-dirs ./auth
