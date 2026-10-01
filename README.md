@@ -113,7 +113,8 @@ gravpool/
 │   ├── combo.py                 #   virtual model combo (fallback/fusion)
 │   ├── quota.py                 #   fetchAvailableModels + snapshot
 │   ├── rotate.py                #   round-robin rotator
-│   ├── web.py                   #   dashboard web zero-dep
+│   ├── proxy.py                 #   spawn + supervise CLIProxyAPI (embedded /v1)
+│   ├── web.py                   #   dashboard web zero-dep + reverse-proxy /v1
 │   ├── cli.py                   #   antarmuka command-line
 │   ├── _local_creds.py.example  #   template kredensial (opsional, GITIGNORED)
 ├── install.sh / install.bat     # installer 1-command (cek Python + login)
@@ -123,7 +124,7 @@ gravpool/
 ├── docs/
 │   ├── install.md               # panduan instalasi satu-bundle
 │   └── opencode.md              # panduan integrasi OpenCode
-├── static/                      # aset statis UI dashboard
+├── static/                      # UI dashboard (index.html, style.css, app.js)
 ├── CHANGELOG.md                 # riwayat perubahan (Keep a Changelog)
 ├── pyproject.toml               # metadata paket
 ├── LICENSE                      # MIT
@@ -223,17 +224,22 @@ opencode run "Explain this codebase" --model antigravity/claude-sonnet-4-6
 Config lengkap di [`examples/opencode.json`](examples/opencode.json),
 panduan di [`docs/opencode.md`](docs/opencode.md).
 
-### CLIProxyAPI
+### CLIProxyAPI (standalone, opsional)
 
-`cli-proxy-api` mengonsumsi auth file yang sama dan mengekspose
-`/v1/models` + chat completions:
+Secara default proxy sudah berjalan otomatis di dalam `gui`. Jika ingin
+menjalankan `cli-proxy-api` secara terpisah, gunakan config v8 nested yang
+sama seperti yang di-generate `bundle.py` (`config.yaml`):
 
 ```yaml
-# /opt/cliproxy-config.yaml
-host: 127.0.0.1
-port: 8317
-auth-dir: /root/.cli-proxy-api
-api-keys: ["sk-…"]
+# config.yaml (schema v8 — nested)
+server:
+  host: 127.0.0.1
+  port: 8317
+oauth:
+  auth-dir: ./auth
+access:
+  api-keys:
+    - "sk-local"
 ```
 
 ### Library

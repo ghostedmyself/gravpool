@@ -6,7 +6,7 @@ import time
 import urllib.parse
 import http.client
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import parse_qs, unquote, urlparse
+from urllib.parse import parse_qs, urlparse
 
 from .oauth import OAuthError, refresh_account, build_auth_url, exchange_code, save_new_account
 from .quota import pool_quota
