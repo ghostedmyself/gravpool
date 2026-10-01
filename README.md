@@ -90,12 +90,13 @@ python -m antigravity.cli gui    --auth-dirs ./auth   # → http://127.0.0.1:839
 
 | Kategori | Fitur | Modul |
 |---|---|---|
-| 🔑 **OAuth** | refresh token otomatis, login akun baru, userinfo | `oauth.py` |
+| 🔑 **OAuth** | refresh token otomatis, login akun baru (1-command browser), userinfo | `oauth.py`, `login_flow.py` |
 | 📊 **Kuota** | `fetchAvailableModels` live, snapshot JSON, cache | `quota.py` |
 | 🔄 **Rotasi** | round-robin thread-safe, auto-skip akun mati, auto-refresh | `rotate.py` |
+| 🧩 **Combo** | model virtual `fallback`/`fusion`, auto-skip kuota habis | `combo.py` |
 | 💾 **Storage** | model auth file CLIProxyAPI-compatible, scan + expiry | `store.py` |
-| 🖥️ **GUI** | dashboard web zero-dep, quota bar + token chip + refresh 1-klik | `web.py` |
-| ⌨️ **CLI** | `status` / `quota` / `refresh` / `gui` / `login-binary` | `cli.py` |
+| 🖥️ **GUI** | dashboard web zero-dep, quota bar + token chip + refresh 1-klik + kelola combo | `web.py` |
+| ⌨️ **CLI** | `status` / `quota` / `refresh` / `gui` / `add-account` / `combo` / `login-binary` | `cli.py` |
 
 ---
 
@@ -107,6 +108,8 @@ antigravity-pool/
 │   ├── constants.py             #   OAuth client + endpoint (publik)
 │   ├── store.py                 #   model & scan auth file
 │   ├── oauth.py                 #   refresh / login / userinfo
+│   ├── login_flow.py            #   login 1-command (browser callback)
+│   ├── combo.py                 #   virtual model combo (fallback/fusion)
 │   ├── quota.py                 #   fetchAvailableModels + snapshot
 │   ├── rotate.py                #   round-robin rotator
 │   ├── web.py                   #   dashboard web zero-dep
@@ -131,10 +134,39 @@ antigravity-pool/
 | `quota` | ringkasan kuota per akun; `--out file.json` untuk snapshot penuh |
 | `refresh` | refresh semua token yang expired |
 | `gui` | jalankan dashboard web (`--host` / `--port`) |
+| `add-account` | login akun baru 1-command: browser consent → callback → simpan auth file |
+| `combo` | kelola virtual model combo: `list` / `add` / `rm` / `resolve` |
 | `login-binary` | tambah akun baru lewat flow login bawaan `cli-proxy-api` |
 
 Semua perintah menerima `--auth-dirs DIR [DIR ...]` untuk menunjuk lokasi
 auth file (default `/root/.cli-proxy-api*` di server).
+
+### Login akun baru (tanpa binary)
+
+```bash
+# 1 command, langsung buka browser untuk consent Google:
+python -m antigravity.cli add-account
+
+# kalau di server headless (browser tidak bisa dibuka otomatis):
+python -m antigravity.cli add-account --no-browser   # print URL, paste manual
+```
+
+### Combo (virtual model dengan fallback otomatis)
+
+```bash
+# buat combo fallback: kalau gemini-3-pro kuota habis → claude-sonnet-4-6
+python -m antigravity.cli combo add main gemini-3-pro claude-sonnet-4-6
+
+# lihat daftar + resolve terhadap kuota live:
+python -m antigravity.cli combo list
+python -m antigravity.cli combo resolve main
+
+# hapus combo:
+python -m antigravity.cli combo rm main
+```
+
+`kind` bisa `fallback` (coba berurutan, pindah saat kuota habis) atau `fusion`
+(gabung semua model yang tersedia). Kelola combo juga bisa dari dashboard web.
 
 ---
 

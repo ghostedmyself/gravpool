@@ -79,6 +79,71 @@ def cmd_refresh(args) -> int:
     return 1 if fail and not ok else 0
 
 
+def cmd_add_account(args) -> int:
+    """One-command interactive login: browser consent -> callback -> save."""
+    from .login_flow import add_account_cmd
+
+    auth_dirs = dirs_from(args)
+    auth_dir = args.auth_dir or (auth_dirs[0] if auth_dirs else "auth")
+    try:
+        acct = add_account_cmd(auth_dir, browser_open=not args.no_browser,
+                               timeout=args.timeout)
+    except (RuntimeError, OAuthError) as e:
+        print(f"login failed: {e}", file=sys.stderr)
+        return 1
+    print(f"saved {acct.path}")
+    return 0
+
+
+def cmd_combo(args) -> int:
+    from . import combo as combo_mod
+
+    if args.combo_cmd == "list":
+        combos = combo_mod.load_combos()
+        if not combos:
+            print("no combos yet — add one with 'combo add'")
+            return 0
+        for c in combos:
+            print(f"{c.name:24} {c.kind:9} {', '.join(c.models)}")
+        return 0
+
+    if args.combo_cmd == "add":
+        try:
+            c = combo_mod.add_combo(args.name, args.models or [],
+                                    kind=args.kind)
+        except ValueError as e:
+            print(f"add failed: {e}", file=sys.stderr)
+            return 1
+        print(f"combo {c.name} saved ({c.kind}, {len(c.models)} models)")
+        return 0
+
+    if args.combo_cmd == "rm":
+        ok = combo_mod.remove_combo(args.name)
+        print(f"removed {args.name}" if ok else f"combo {args.name} not found")
+        return 0 if ok else 1
+
+    if args.combo_cmd == "resolve":
+        c = combo_mod.get_combo(args.name)
+        if not c:
+            print(f"combo {args.name} not found", file=sys.stderr)
+            return 1
+        accounts = load_accounts(dirs_from(args))
+        snap = pool_quota(accounts)
+        res = combo_mod.resolve_combo(args.name, snap,
+                                      strategy=args.strategy or None,
+                                      threshold=args.threshold)
+        print(f"combo {res['combo']} [{res['strategy']}]")
+        print(f"  picked : {res['picked']}")
+        if res["fallback"]:
+            print(f"  fallback: {', '.join(res['fallback'])}")
+        if res["drained"]:
+            print(f"  drained: {', '.join(res['drained'])}")
+        print(f"  reason : {res['reason']}")
+        return 0
+
+    raise SystemExit("unknown combo subcommand")
+
+
 def cmd_login_binary(args) -> int:
     """Run the pool binary's built-in `--antigravity-login` flow."""
     binary = args.binary or "/opt/cli-proxy-api"
@@ -128,6 +193,35 @@ def main(argv=None) -> int:
     sp.add_argument("--binary", default="/opt/cli-proxy-api")
     sp.add_argument("--config", default=None)
     sp.set_defaults(fn=cmd_login_binary)
+
+    sp = sub.add_parser("add-account", help="one-command browser login for a new account")
+    add_dirs(sp)
+    sp.add_argument("--auth-dir", default=None,
+                    help="auth dir to write the new auth file into (default: first auth dir)")
+    sp.add_argument("--no-browser", action="store_true",
+                    help="print the consent URL instead of opening a browser")
+    sp.add_argument("--timeout", type=int, default=300,
+                    help="seconds to wait for the browser callback")
+    sp.set_defaults(fn=cmd_add_account)
+
+    sp = sub.add_parser("combo", help="manage virtual model combos (fallback/fusion)")
+    add_dirs(sp)
+    csub = sp.add_subparsers(dest="combo_cmd", required=True)
+    csp = csub.add_parser("list", help="list combos")
+    csp.set_defaults(fn=cmd_combo)
+    csp = csub.add_parser("add", help="add/update a combo")
+    csp.add_argument("name")
+    csp.add_argument("models", nargs="*", help="ordered model names (space or comma separated)")
+    csp.add_argument("--kind", choices=["fallback", "fusion"], default="fallback")
+    csp.set_defaults(fn=cmd_combo)
+    csp = csub.add_parser("rm", help="remove a combo")
+    csp.add_argument("name")
+    csp.set_defaults(fn=cmd_combo)
+    csp = csub.add_parser("resolve", help="resolve a combo against live quota")
+    csp.add_argument("name")
+    csp.add_argument("--strategy", choices=["fallback", "fusion"], default=None)
+    csp.add_argument("--threshold", type=float, default=0.05)
+    csp.set_defaults(fn=cmd_combo)
 
     args = p.parse_args(argv)
     return args.fn(args)
