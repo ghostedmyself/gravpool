@@ -2,7 +2,9 @@
 antigravity-*.json
 gravpool/_local_creds.py
 *.json.tmp
+bin/
 auth/
+config.yaml
 .env
 __pycache__/
 *.pyc
