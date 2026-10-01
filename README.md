@@ -41,14 +41,14 @@ Tanpa dependency apa pun (pure Python stdlib). Teruji live terhadap akun Pro
 ```mermaid
 flowchart LR
     A["🔑 Google Account<br/><i>Antigravity Pro</i>"] -->|"OAuth consent<br/><code>add-account</code>"| C["<b>auth file</b><br/><code>antigravity-&lt;email&gt;.json</code>"]
-    C --> D["<b>GravPool</b>"]
+    C --> D["<b>GravPool</b> (Satu Proses)"]
     D --> E["refresh<br/><code>refresh_token → access_token</code>"]
     D --> F["quota<br/><code>fetchAvailableModels</code>"]
     D --> G["rotation<br/>round-robin"]
-    E --> H["🖥️ web GUI"]
+    E --> H["🖥️ web GUI<br/><code>:8390</code>"]
     F --> H
     G --> H
-    F --> I["OpenAI-compatible<br/><code>/v1/models</code><br/>(via CLIProxyAPI)"]
+    D --> I["OpenAI-compatible<br/><code>:8390/v1</code><br/>(via embedded CLIProxyAPI)"]
     I --> J["🤖 OpenCode / klien lain"]
 ```
 
@@ -60,25 +60,26 @@ OpenAI-compatible di OpenCode atau tool apa pun.
 
 ## ⚡ Quickstart (Satu Bundle)
 
-Instalasi dan konfigurasi sekarang jadi satu command otomatis (login, download proxy, bikin config).
+Instalasi dan konfigurasi sekarang jadi satu alur otomatis yang menyatukan proxy dan dashboard dalam satu port.
 
 ```bash
-# 1. clone (atau download ZIP)
+# a. clone (atau download ZIP)
 git clone https://github.com/ghostedmyself/gravpool.git
 cd gravpool
 
-# 2. jalankan bundle (download proxy + login akun + generate config.yaml)
-# Mac/Linux:
-./install.sh
-# Windows:
-install.bat
-# Atau via Python langsung:
-python bundle.py
+# b. jalankan bundle untuk download proxy
+./install.sh   # atau install.bat di Windows, atau `python bundle.py --no-login`
+
+# c. login akun Google (lakukan sekali)
+python -m gravpool.cli add-account --auth-dir auth
+
+# d. jalankan dashboard + proxy secara bersamaan
+python -m gravpool.cli gui --auth-dirs auth
 ```
 
-Setelah bundle selesai:
-- **Dashboard GravPool:** Buka tab baru, jalankan `python -m gravpool.cli gui --auth-dirs auth` (tersedia di http://127.0.0.1:8390)
-- **Endpoint Proxy:** Jalankan `bin/cli-proxy-api --config config.yaml` (tersedia di http://127.0.0.1:8317/v1)
+Setelah itu:
+- Buka dashboard di http://127.0.0.1:8390
+- Arahkan OpenAI client apa pun ke endpoint `http://127.0.0.1:8390/v1` dengan API key `sk-local`
 
 > Kredensial OAuth publik sudah **built-in** — tidak perlu copy/edit file creds.
 > Mau pakai client sendiri? export `ANTIGRAVITY_CLIENT_ID` / `ANTIGRAVITY_CLIENT_SECRET`
@@ -95,7 +96,7 @@ Setelah bundle selesai:
 | 🔄 **Rotasi** | round-robin thread-safe, auto-skip akun mati, auto-refresh | `rotate.py` |
 | 🧩 **Combo** | model virtual `fallback`/`fusion`, auto-skip kuota habis | `combo.py` |
 | 💾 **Storage** | model auth file CLIProxyAPI-compatible, scan + expiry | `store.py` |
-| 🖥️ **GUI** | dashboard web zero-dep, quota bar + token chip + refresh 1-klik + kelola combo | `web.py` |
+| 🖥️ **GUI** | dashboard web zero-dep, proxy terintegrasi — dashboard + `/v1` satu port | `web.py` |
 | ⌨️ **CLI** | `status` / `quota` / `refresh` / `gui` / `add-account` / `combo` / `login-binary` | `cli.py` |
 
 ---
@@ -122,6 +123,7 @@ gravpool/
 ├── docs/
 │   ├── install.md               # panduan instalasi satu-bundle
 │   └── opencode.md              # panduan integrasi OpenCode
+├── static/                      # aset statis UI dashboard
 ├── CHANGELOG.md                 # riwayat perubahan (Keep a Changelog)
 ├── pyproject.toml               # metadata paket
 ├── LICENSE                      # MIT
@@ -137,7 +139,7 @@ gravpool/
 | `status` | tampilkan state token tiap akun (ok / expired / disabled) |
 | `quota` | ringkasan kuota per akun; `--out file.json` untuk snapshot penuh |
 | `refresh` | refresh semua token yang expired |
-| `gui` | jalankan dashboard web (`--host` / `--port`) |
+| `gui` | jalankan dashboard web dan embedded proxy (`--host` / `--port`). Gunakan `--no-proxy` untuk mematikan proxy. |
 | `add-account` | login akun baru 1-command: browser consent → callback → simpan auth file |
 | `combo` | kelola virtual model combo: `list` / `add` / `rm` / `resolve` |
 | `login-binary` | tambah akun baru lewat flow login bawaan `cli-proxy-api` |
@@ -196,15 +198,15 @@ Satu file per akun, **CLIProxyAPI-compatible** (drop-in):
 
 ## 🌐 OpenAI-compatible endpoint
 
-Script `bundle.py` otomatis mengunduh binary CLIProxyAPI dan membuatkan `config.yaml`. Ini memungkinkan kamu pakai akun pool sebagai endpoint OpenAI-compatible standar.
+Endpoint OpenAI-compatible sekarang terintegrasi langsung ke dalam proses GUI (melalui *child process* CLIProxyAPI yang di-reverse proxy secara streaming). 
 
 Cara pakainya:
-1. Jalankan proxy: `bin/cli-proxy-api --config config.yaml`
+1. Pastikan GUI berjalan: `python -m gravpool.cli gui --auth-dirs auth`
 2. Di client/tool AI-mu (seperti OpenCode, Cline, Cursor), set:
-   - **Base URL:** `http://127.0.0.1:8317/v1`
+   - **Base URL:** `http://127.0.0.1:8390/v1`
    - **API Key:** `sk-local`
 
-> **Note:** GravPool mengatur manajemen akun, rotasi, dan kuota. CLIProxyAPI murni bertugas sebagai jembatan endpoint HTTP-nya. Keduanya sudah disatukan pengaturannya lewat `bundle.py`.
+> **Note:** GravPool mengatur manajemen akun, rotasi, dan kuota, serta otomatis menjalankan proxy di background tanpa perlu terminal terpisah.
 
 ---
 

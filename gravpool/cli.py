@@ -20,6 +20,7 @@ import sys
 from .oauth import OAuthError, refresh_account
 from .quota import pool_quota
 from .store import load_accounts
+from .proxy import ProxySupervisor
 from .web import serve
 
 DEFAULT_AUTH_DIRS = [
@@ -157,9 +158,18 @@ def cmd_login_binary(args) -> int:
 
 def cmd_gui(args) -> int:
     """Serve the web dashboard."""
-    serve(dirs_from(args), host=args.host, port=args.port)
-    return 0
+    proxy = None
+    if not args.no_proxy:
+        binary_path = "/root/repos/gravpool/bin/cli-proxy-api" if os.name != "nt" else "/root/repos/gravpool/bin/cli-proxy-api.exe"
+        proxy = ProxySupervisor(binary_path, dirs_from(args),
+                                port=args.proxy_port if args.proxy_port else None)
 
+    try:
+        serve(dirs_from(args), host=args.host, port=args.port, proxy=proxy)
+    finally:
+        if proxy:
+            proxy.stop()
+    return 0
 
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="gravpool",
@@ -187,6 +197,9 @@ def main(argv=None) -> int:
     add_dirs(sp)
     sp.add_argument("--host", default="127.0.0.1")
     sp.add_argument("--port", type=int, default=8390)
+    sp.add_argument("--with-proxy", dest="no_proxy", action="store_false", default=False)
+    sp.add_argument("--no-proxy", action="store_true", default=False)
+    sp.add_argument("--proxy-port", type=int, default=0)
     sp.set_defaults(fn=cmd_gui)
 
     sp = sub.add_parser("login-binary", help="run cli-proxy-api --antigravity-login")

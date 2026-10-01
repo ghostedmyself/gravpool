@@ -5,6 +5,16 @@ Semua perubahan penting pada proyek ini dicatat di sini.
 Format berdasarkan [Keep a Changelog](https://keepachangelog.com/id/1.0.0/),
 dan proyek ini mengikuti [Semantic Versioning](https://semver.org/lang/id/).
 
+## [0.4.0] - 2026-10-01
+
+### Ditambahkan
+- Endpoint proxy terintegrasi langsung di dalam `gravpool.cli gui` lewat reverse-proxy streaming di `/v1`.
+- Satu perintah, satu port (`8390` default) untuk UI dashboard dan OpenAI-compatible endpoint secara bersamaan.
+- UI redesign penuh dengan fitur toggle enable/disable akun, dan status proxy + `add-account` langsung dari dalam dashboard.
+
+### Diubah
+- Alur bundle disesuaikan untuk mengarahkan pengguna hanya pada satu perintah jalan `python -m gravpool.cli gui`.
+
 ## [0.3.0] - 2026-10-01
 
 ### Ditambahkan

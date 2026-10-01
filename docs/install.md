@@ -1,6 +1,6 @@
 # Instalasi Satu-Bundle (Tanpa VPS)
 
-GravPool sekarang hadir dalam alur satu-bundle via script `bundle.py`. Proses ini otomatis mendownload CLIProxyAPI, mengatur login Google, dan membuatkan `config.yaml`. Semuanya jalan penuh di laptop lokal.
+GravPool sekarang hadir dalam alur satu-bundle via script `bundle.py`. Proses ini otomatis mendownload CLIProxyAPI dan membuatkan `config.yaml`. Semuanya jalan penuh di laptop lokal.
 
 **Yang kamu butuhkan:**
 - Python 3.9+
@@ -10,9 +10,9 @@ GravPool sekarang hadir dalam alur satu-bundle via script `bundle.py`. Proses in
 
 ## Cara tercepat (1 Langkah)
 
-Setelah download/extract repo, tinggal jalankan script entry point:
+Setelah download/extract repo, tinggal jalankan script entry point untuk download proxy:
 
-- **Windows:** double-click `install.bat`, atau:
+- **Windows:** double-click `install.bat` (atau `python bundle.py --no-login`), atau:
   ```cmd
   install.bat
   ```
@@ -21,45 +21,45 @@ Setelah download/extract repo, tinggal jalankan script entry point:
   chmod +x install.sh && ./install.sh
   ```
 
-### Apa yang bundle ini lakukan?
-1. **Login Akun:** Membuka browser untuk otorisasi Google Antigravity dan menyimpan auth file di folder `auth/`.
-2. **Download Proxy:** Otomatis menarik binary `cli-proxy-api` terbaru ke dalam folder `bin/`.
-3. **Generate Config:** Membuat file `config.yaml` dengan setup standar (port 8317, key `sk-local`).
+*(Catatan: script bundle secara otomatis menarik binary `cli-proxy-api` terbaru ke folder `bin/` dan mengenerate `config.yaml`.)*
 
-*(Catatan: kamu bisa bypass login dengan `--no-login` atau bypass download proxy dengan `--no-proxy` jika menjalankan `python bundle.py` manual).*
+## Cara Pakai (Alur Unified)
 
----
+Setelah setup awal, ikuti 2 langkah ini:
 
-## Cara Pakai
+**1. Login Akun**
+Lakukan ini sekali, atau kapan saja kamu mau nambah akun baru. Bisa dari command line:
+```bash
+python -m gravpool.cli add-account --auth-dir auth
+```
+*(Atau, kamu bisa menggunakan tombol Add Account langsung dari dashboard nantinya)*.
 
-Setelah instalasi selesai, kamu punya dua komponen utama:
-
-**1. Dashboard GravPool (Manajemen Akun/Kuota)**
-Jalankan di terminal:
+**2. Jalankan GravPool (Satu Perintah, Satu Port)**
+Sekarang jalankan GUI:
 ```bash
 python -m gravpool.cli gui --auth-dirs auth
 ```
-Akses di browser: http://127.0.0.1:8390
 
-**2. Endpoint OpenAI-Compatible (Proxy)**
-Buka terminal baru, jalankan:
-```bash
-bin/cli-proxy-api --config config.yaml
-```
-Sekarang klien AI apa pun (seperti OpenCode) bisa connect ke:
-- **Base URL:** `http://127.0.0.1:8317/v1`
-- **API Key:** `sk-local`
+Ini akan memulai:
+- **Dashboard GravPool:** Buka di browser http://127.0.0.1:8390 (untuk kelola akun, kuota, combo).
+- **Endpoint OpenAI-Compatible (Proxy):** Proxy API otomatis ter-embed dan dijalankan di background, bisa diakses dari AI client kamu di base URL `http://127.0.0.1:8390/v1` dengan API key `sk-local`.
 
 ---
 
 ## FAQ
 
 **Apakah butuh VPS sama sekali?**
-Tidak. Seluruh alur (login OAuth, refresh, kuota, rotasi, GUI, endpoint) jalan lokal.
+Tidak. Seluruh alur (login OAuth, refresh, kuota, rotasi, GUI, endpoint) jalan lokal, semuanya jadi satu di port 8390.
+
+**Kenapa proxy nggak perlu dijalankan terpisah?**
+Sekarang `gravpool.cli gui` menjalankan reverse-proxy secara internal ke *child process* `cli-proxy-api`. Artinya, kamu nggak perlu buka dua terminal lagi; semuanya cukup 1 command.
+
+*(Note: Kalau kamu mau jalankan `cli-proxy-api` secara standalone tanpa dashboard, kamu masih bisa menjalankan `bin/cli-proxy-api --config config.yaml` seperti dulu).*
+
+**Bagaimana pakai /v1 dari klien?**
+Di client AI kamu (misal: OpenCode, Cursor, Cline):
+- **Base URL:** `http://127.0.0.1:8390/v1`
+- **API Key:** `sk-local`
 
 **Akun Antigravity-nya dari mana?**
 Akun Google biasa yang login ke Antigravity (Pro).
-
-**Mau tambah akun lagi?**
-Jalankan ulang `install.sh` / `install.bat`, atau manual:
-`python -m gravpool.cli add-account --auth-dir auth`

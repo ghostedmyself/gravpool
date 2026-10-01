@@ -159,10 +159,11 @@ def main() -> int:
     print()
     print("== Done. Next steps ==")
     if not args.no_login:
-        print(f"  Dashboard : python -m gravpool.cli gui --auth-dirs {AUTH_DIR}  ->  http://127.0.0.1:8390")
-    if not args.no_proxy:
-        print(f"  Proxy     : {_proxy_cmd()} --config {CONFIG_PATH}  ->  http://127.0.0.1:{PROXY_PORT}/v1")
-        print(f"  API key   : {API_KEY}")
+        print(f"  Login Account : python -m gravpool.cli add-account --auth-dir {AUTH_DIR}")
+    print(f"  Start GravPool: python -m gravpool.cli gui --auth-dirs {AUTH_DIR}")
+    print(f"  (Dashboard at http://127.0.0.1:8390)")
+    print(f"  (API at       http://127.0.0.1:8390/v1)")
+    print(f"  API key       : {API_KEY}")
     return 0
 
 

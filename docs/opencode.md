@@ -1,18 +1,17 @@
 # Menggunakan GravPool dari OpenCode
 
-Melalui setup satu-bundle, endpoint **OpenAI-compatible** sudah disiapkan untukmu lewat `cli-proxy-api`. OpenCode bisa connect langsung menggunakan provider bawaan `@ai-sdk/openai-compatible`.
+Melalui setup satu-bundle, endpoint **OpenAI-compatible** sudah disiapkan untukmu dan terintegrasi di dalam dashboard GUI. OpenCode bisa connect langsung menggunakan provider bawaan `@ai-sdk/openai-compatible`. Proxy kini *embedded* di dalam proses GUI (tidak butuh dijalankan terpisah).
 
 ## Setup (Setelah Instalasi Bundle)
 
 1. Pastikan OpenCode terinstall: `npm i -g opencode-ai@latest`
-2. Pastikan proxy GravPool sudah berjalan di terminalmu:
+2. Pastikan dashboard GravPool sudah berjalan di terminalmu:
    ```bash
-   bin/cli-proxy-api --config config.yaml
+   python -m gravpool.cli gui --auth-dirs auth
    ```
-   *(Proxy ini otomatis dibuat saat kamu menjalankan `install.sh` atau `bundle.py`).*
 3. Atur kredensial. Contohnya lewat environment variable agar aman:
    ```bash
-   export ANTIGRAVITY_BASE_URL="http://127.0.0.1:8317/v1"
+   export ANTIGRAVITY_BASE_URL="http://127.0.0.1:8390/v1"
    export ANTIGRAVITY_API_KEY="sk-local"
    ```
 

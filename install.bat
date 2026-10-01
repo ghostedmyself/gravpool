@@ -34,10 +34,11 @@ echo ========================================================
 echo [SUCCESS] Gravpool setup completed!
 echo.
 echo Next steps:
-echo 1. Start Dashboard:  %PY% -m gravpool.cli gui --auth-dirs auth
-echo    (Visit http://127.0.0.1:8390)
-echo 2. Start Proxy API:  bin\cli-proxy-api.exe --config config.yaml
-echo    (API at http://127.0.0.1:8317/v1)
+echo 1. Login Account:  %PY% -m gravpool.cli add-account --auth-dir auth
+echo    (Do this once, or use the Add Account button in Dashboard)
+echo 2. Start GravPool: %PY% -m gravpool.cli gui --auth-dirs auth
+echo    (Dashboard at http://127.0.0.1:8390)
+echo    (API at       http://127.0.0.1:8390/v1 with key sk-local)
 echo ========================================================
 echo.
 pause
