@@ -382,15 +382,17 @@ h1, h2, h3, h4, h5, h6 {
   gap: 0.75rem;
 }
 .card {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-main);
-  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.05);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: var(--radius-lg);
   padding: 1rem;
   transition: all var(--transition-fast);
 }
 .card:hover {
-  background-color: var(--bg-card-hover);
-  border-color: var(--accent-primary);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(212, 164, 67, 0.5);
 }
 .card-row {
   display: flex;
@@ -512,10 +514,17 @@ h1, h2, h3, h4, h5, h6 {
   margin-top: 2rem;
 }
 .provider-card {
-  background-color: var(--bg-card);
-  border: 1px solid var(--border-main);
-  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.05);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: var(--radius-lg);
   padding: 1.25rem;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+.provider-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(212, 164, 67, 0.5);
 }
 .provider-card.disabled {
   opacity: 0.6;

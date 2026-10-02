@@ -1,19 +1,37 @@
-# Instalasi Ulang (1 Perintah)
+# Instalasi (1 Perintah)
 
-GravPool install ke `~/.local/share/gravpool`, dan memasang launcher `gravpool`
-di PATH. Aman dijalankan ulang (idempotent) untuk update ke versi terbaru.
-
-**Yang kamu butuhkan:**
-- Python 3.9+
-- Git
-- Akun Google (akses Antigravity, opsional)
+GravPool sekarang **bisa di-install sebagai package CLI** (seperti `npm install -g`),
+sekaligus tetap punya installer satu-perintah untuk yang tidak pakai uv/pip.
 
 ---
 
-## Cara tercepat
+## Cara A — uv / pip (direkomendasikan, seperti `npm install -g`)
+
+```bash
+# sekali saja kalau uv belum ada
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# install dari PyPI (setelah release) atau langsung dari repo lokal:
+uv tool install gravpool
+# ATAU
+uv tool install /path/ke/repo/gravpool
+
+# jalankan
+gravpool gui --port 8390
+```
+
+`uv tool install` memasang binary `gravpool` di PATH, dashboard + static assets
+ikut dibundle di dalam package — tidak perlu clone repo manual.
+
+> Tanpa uv tapi punya pipx: `pipx install gravpool`. Tanpa keduanya, pakai Cara B.
+
+---
+
+## Cara B — installer satu-perintah (fallback)
 
 ```bash
 curl -LsSf https://raw.githubusercontent.com/ghostedmyself/gravpool/main/install.sh | bash
+gravpool gui --port 8390
 ```
 
 Script ini:
@@ -22,8 +40,9 @@ Script ini:
 3. Pasang launcher `gravpool` di `~/.local/bin`
 4. Cetak langkah selanjutnya
 
-> **Windows:** jalankan `install.bat` setelah clone repo, atau aktifkan WSL
-> lalu pakai perintah di atas.
+> **Windows:** jalankan `install.bat`, atau pakai WSL lalu perintah di atas.
+
+---
 
 ## Pakai
 
@@ -45,11 +64,11 @@ Ini memulai:
 - **Dashboard** — http://127.0.0.1:8390 (kelola akun, kuota, combo, provider)
 - **Endpoint OpenAI-compatible** — `http://127.0.0.1:8390/v1` dengan key `sk-local`
 
-## Pindah ke versi terbaru
+## Update ke versi terbaru
 
 ```bash
-# installer idempotent — cukup jalankan lagi
-curl -LsSf https://raw.githubusercontent.com/ghostedmyself/gravpool/main/install.sh | bash
+uv tool upgrade gravpool        # Cara A
+# atau jalankan install.sh lagi (Cara B, idempotent)
 ```
 
 ## FAQ
@@ -63,3 +82,9 @@ curl -LsSf https://raw.githubusercontent.com/ghostedmyself/gravpool/main/install
 **Mau tambah model/provider eksternal?** Klik **Add Provider** di dashboard,
 isi base URL + API key, lalu Test Connection — model otomatis ter-detect dan
 langsung tersedia di endpoint yang sama.
+
+**Proxy binary (`cli-proxy-api`) tidak ikut?** Benar — binary itu diperlakukan
+sebagai runtime optional (di-fetch `bundle.py` ke folder `bin/` di repo/install).
+Antigravity account pool dan semua provider eksternal tetap jalan tanpa binary
+(`--no-proxy`): yang berkurang hanya lapisan `/v1` buat Antigravity di depan
+binary. Bahwa dashboard + routing tetap penuh.

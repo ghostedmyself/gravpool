@@ -27,10 +27,19 @@ Tanpa dependency apa pun (pure Python stdlib). Teruji live terhadap akun Pro.
 
 ## ⚡ Mulai dalam 60 detik
 
+**Cara A — pip / uv (seperti `npm install -g`, direkomendasikan):**
+
+```bash
+# butuh uv (https://astral.sh/uv) — sekali saja: curl -LsSf https://astral.sh/uv/install.sh | sh
+uv tool install gravpool        # ATAU dari repo lokal: uv tool install /path/ke/gravpool
+
+gravpool gui --port 8390
+```
+
+**Cara B — installer satu-perintah (fallback, tanpa uv):**
+
 ```bash
 curl -LsSf https://raw.githubusercontent.com/ghostedmyself/gravpool/main/install.sh | bash
-
-# jalankan gateway + dashboard (bisa juga cukup: gravpool gui)
 gravpool gui --port 8390
 ```
 
@@ -83,6 +92,7 @@ Semua perintah menerima `--auth-dirs DIR [DIR ...]` untuk menunjuk lokasi auth f
 ```
 gravpool/
 ├── gravpool/            # paket inti (stdlib only)
+│   ├── static/          #   UI dashboard (index.html, style.css, app.js)
 │   ├── web.py           #   dashboard + reverse-proxy /v1
 │   ├── providers.py     #   provider eksternal (auto-detect model)
 │   ├── quota.py         #   fetchAvailableModels live
@@ -90,10 +100,9 @@ gravpool/
 │   ├── oauth.py         #   refresh / login
 │   ├── combo.py         #   combo virtual (fallback/fusion)
 │   └── cli.py           #   antarmuka command-line
-├── static/              # UI dashboard (index.html, style.css, app.js)
 ├── docs/                # panduan install & integrasi
 ├── examples/            # config siap pakai
-├── install.sh           # installer satu-perintah
+├── install.sh           # installer satu-perintah (fallback)
 └── bundle.py            # fetch CLIProxyAPI proxy binary
 ```
 

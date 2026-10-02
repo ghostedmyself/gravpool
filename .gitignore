@@ -12,3 +12,5 @@ __pycache__/
 dist/
 build/
 gui.log
+# screenshots for Discord/chat are not repo artifacts
+*.png

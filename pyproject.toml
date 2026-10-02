@@ -22,3 +22,6 @@ gravpool = "gravpool.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["gravpool*"]
+
+[tool.setuptools.package-data]
+gravpool = ["static/*"]

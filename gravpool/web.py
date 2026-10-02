@@ -19,7 +19,13 @@ from . import providers as ext_providers
 
 QUOTA_CACHE_TTL = 30  # seconds
 
-_STATIC_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static")
+def _static_dir() -> str:
+    """Resolve the static asset dir whether running from a checkout or an installed wheel."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    # static/ now ships inside the package (package data) so both dev and wheel resolve here.
+    return os.path.join(here, "static")
+
+_STATIC_DIR = _static_dir()
 
 add_acc_state = {
     "pending": False,
