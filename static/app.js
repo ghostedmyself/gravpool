@@ -28,7 +28,7 @@ const UI = {
 };
 
 let state = {
-  apiKey: '',
+  apiKey: '***',
   pollingAuth: false
 };
 
@@ -324,38 +324,46 @@ UI.testProviderBtn.addEventListener('click', async () => {
   }
   UI.testProviderBtn.disabled = true;
   UI.providerTestResult.innerHTML = `<span class="text-dim">Testing...</span>`;
+  const tmpName = name || '_test';
+  
   try {
-    // Add temporarily then test
-    const res = await apiCall('/api/providers', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ name: name || '_test', base_url: baseUrl, api_key: apiKey,
-        models: document.getElementById('provider-models').value.split(',').map(s => s.trim()).filter(Boolean) || [] })
-    });
-    if (res.error) throw new Error(res.error);
-    // Now test connection
-    const testRes = await apiCall('/api/providers/test', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ name: name || '_test' })
-    });
+    let testRes;
+    try {
+      // Direct approach first
+      testRes = await apiCall('/api/providers/test', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ base_url: baseUrl, api_key: apiKey })
+      });
+    } catch (e) {
+      // Fallback approach if backend doesn't support direct
+      const res = await apiCall('/api/providers', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ name: tmpName, base_url: baseUrl, api_key: apiKey })
+      });
+      if (res.error) throw new Error(res.error);
+      
+      testRes = await apiCall('/api/providers/test', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ name: tmpName })
+      });
+      
+      // Clean up temp provider
+      try {
+        await apiCall(`/api/providers/${encodeURIComponent(tmpName)}`, { method: 'DELETE' });
+      } catch {}
+    }
+    
     if (testRes.ok) {
       const models = testRes.models || [];
-      UI.providerTestResult.innerHTML = `<span class="text-ok">Connected — ${models.length} models found</span>`;
-      // Delete temp provider, user needs to click Add
-      if (name === '_test' || !name) {
-        await apiCall(`/api/providers/${encodeURIComponent('_test')}`, { method: 'DELETE' });
-      } else {
-        await apiCall(`/api/providers/${encodeURIComponent(name)}`, { method: 'DELETE' });
-      }
+      UI.providerTestResult.innerHTML = `<span class="text-ok">Connected - ${models.length} models auto-detected</span>`;
     } else {
       UI.providerTestResult.innerHTML = `<span class="text-err">Connection failed</span>`;
     }
   } catch (err) {
     UI.providerTestResult.innerHTML = `<span class="text-err">${escapeHTML(err.message || 'Test failed')}</span>`;
-    // Clean up temp
-    const tmpName = name || '_test';
-    try { await apiCall(`/api/providers/${encodeURIComponent(tmpName)}`, { method: 'DELETE' }); } catch {}
   } finally {
     UI.testProviderBtn.disabled = false;
   }
@@ -366,15 +374,17 @@ UI.providerForm.addEventListener('submit', async (e) => {
   const name = document.getElementById('provider-name').value.trim();
   const baseUrl = document.getElementById('provider-base-url').value.trim();
   const apiKey = document.getElementById('provider-api-key').value.trim();
-  const models = document.getElementById('provider-models').value.split(',').map(s => s.trim()).filter(Boolean);
+  
   if (!name || !baseUrl || !apiKey) return;
+  
   const btn = UI.providerForm.querySelector('button[type="submit"]');
   btn.disabled = true;
+  
   try {
     await apiCall('/api/providers', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ name, base_url: baseUrl, api_key: apiKey, models })
+      body: JSON.stringify({ name, base_url: baseUrl, api_key: apiKey })
     });
     showToast(`Provider ${name} added`);
     UI.addProviderDialog.close();

@@ -122,6 +122,13 @@ def add_provider(name: str, base_url: str, api_key: str, models: list[str] | Non
     existing = _load_raw()
     if any(e["name"] == name for e in existing):
         raise ValueError(f"provider '{name}' already exists")
+    # Auto-detect models if not provided
+    if not models:
+        try:
+            p = Provider(name=name, base_url=base_url, api_key=api_key)
+            models = fetch_provider_models(p, timeout=15)
+        except Exception:
+            models = []
     entry = {
         "name": name,
         "base_url": base_url.rstrip("/"),
