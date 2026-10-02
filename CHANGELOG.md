@@ -5,6 +5,24 @@ Semua perubahan penting pada proyek ini dicatat di sini.
 Format berdasarkan [Keep a Changelog](https://keepachangelog.com/id/1.0.0/),
 dan proyek ini mengikuti [Semantic Versioning](https://semver.org/lang/id/).
 
+## [1.1.0] - 2026-10-02
+
+### Ditambahkan
+- Instalasi ala `npm install -g` — `uv tool install gravpool` / `pipx install`
+  (`[project.scripts]` sudah siap + static assets di-bundle sebagai package data).
+- Panel dashboard dirombak jadi **glassmorphism soft-UI + bento model grid**:
+  ambient blobs, frosted glass panels, kartu glass konsisten (accounts/providers),
+  dialog modal di-center penuh.
+- Dialog "Add External Provider" diperbaiki — sebelumnya `<dialog>` UA style
+  menyempitkan jadi 390px di pojok kiri; sekarang full-viewport & centered.
+
+### Dirapikan
+- Screenshot PNG (dashboard/bento/glass/dialog) dihapus dari git, `*.png` di-gitignore
+  — artefak chat, bukan bagian repo.
+- `static/` dipindah jadi `gravpool/static/` sehingga ikut paket saat di-install.
+- Instalasi: `install.sh` tetap sebagai fallback; dokumentasi README/docs/install.md
+  ditulis ulang dengan metode uv/pip sebagai rekomendasi utama.
+
 ## [1.0.0] - 2026-10-02
 
 Public release — instalasi satu-perintah & dokumentasi profesional.
