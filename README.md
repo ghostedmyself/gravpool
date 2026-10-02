@@ -1,116 +1,131 @@
-<p align="center">
-  <img src="https://img.shields.io/npm/v/gravpool" alt="npm package">
-  <img src="https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white" alt="Python 3.9+">
-  <img src="https://img.shields.io/badge/stdlib-only-0f766e" alt="stdlib only">
-  <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT">
-  <img src="https://img.shields.io/github/v/release/ghostedmyself/gravpool" alt="release">
-</p>
-
 <h1 align="center">GravPool</h1>
-<p align="center"><b>Satu perintah → gateway AI OpenAI-compatible yang selalu sehat.</b><br>
-kelola akun Google Antigravity Pro · tambah provider eksternal · dashboard web</p>
 
 <p align="center">
-  <code>uv tool install gravpool</code> <span>·</span> <code>gravpool gui</code><br>
-  <small>atau satu-perintah: <code>curl -LsSf https://raw.githubusercontent.com/ghostedmyself/gravpool/main/install.sh | bash</code></small>
+  <b>Satu perintah — semua akun Google Antigravity kamu jadi satu gateway AI.</b><br>
+  Kelola akun · pantau kuota · route ke provider lain · tanpa ribet
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white" alt="Python 3.9+">
+  <img src="https://img.shields.io/badge/dependencies-none-0f766e" alt="No dependencies">
+  <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT">
 </p>
 
 ---
 
-GravPool mengubah kredensial **Google Antigravity Pro** menjadi *credential pool*
-yang bisa di-refresh dan dimonitor otomatis, lalu diekspos lewat satu endpoint
-OpenAI-compatible di depan Gemini/Claude/GPT. Kamu juga bisa menyuntikkan
-**API key provider eksternal** (OpenAI, OpenRouter, atau endpoint custom) ke
-gateway yang sama — semua diakses lewat satu `sk-local`.
+## GravPool itu apa?
 
-Tanpa dependency apa pun (pure Python stdlib). Teruji live terhadap akun Pro.
+Punya beberapa akun Google Antigravity Pro (yang punya kuota gratis buat model AI)?
+Males buka-buka tiap akun buat cek sisa kuota, refresh token yang expired, atau
+ganti-ganti model?
+
+**GravPool menggabungkan semua akun itu jadi satu titik.** Sekali setup, semua
+akun dikelola dari satu dashboard web: kuota live, token otomatis ke-refresh,
+model langsung siap dipakai. Hasilnya satu endpoint `http://127.0.0.1:8390/v1`
+yang bisa dipasang di aplikasi AI apa pun — OpenCode, Cursor, Cline, apapun.
+
+Tidak perlu install apa-apa selain Python. Tanpa database, tanpa dependency.
 
 ---
 
-## ⚡ Mulai dalam 60 detik
+## Instalasi (sekitar 1 menit)
 
-**Cara A — pip / uv (seperti `npm install -g`, direkomendasikan):**
+Butuh: **Python 3.9+** dan **Git**. Cek dulu:
 
 ```bash
-# butuh uv (https://astral.sh/uv) — sekali saja: curl -LsSf https://astral.sh/uv/install.sh | sh
-uv tool install gravpool        # ATAU dari repo lokal: uv tool install /path/ke/gravpool
-
-gravpool gui --port 8390
+python3 --version   # harus 3.9 ke atas
+git --version
 ```
 
-**Cara B — installer satu-perintah (fallback, tanpa uv):**
+Lalu:
 
 ```bash
 curl -LsSf https://raw.githubusercontent.com/ghostedmyself/gravpool/main/install.sh | bash
 gravpool gui --port 8390
 ```
 
-Buka dashboard di **http://127.0.0.1:8390**, lalu:
-- **Add Account** — login akun Google Antigravity (sekali, lewat browser)
-- **Add Provider** — masukkan API key eksternal + base URL, otomatis detect model
-- Gunakan endpoint `http://127.0.0.1:8390/v1` dengan API key `sk-local` dari
-  OpenCode, Cline, Cursor, atau tool apa pun.
+Buka **http://127.0.0.1:8390** di browser — dashboard sudah jalan.
 
-> Kredensial OAuth publik sudah **built-in** — tidak perlu setup client sendiri.
-> Query ulang pakai `gravpool gui` untuk update ke versi terbaru (idempotent).
+> Mau pakai `uv` (lebih cepat)? Ganti perintah pertama dengan:
+> `uv tool install gravpool` (install uv dulu: `curl -LsSf https://astral.sh/uv/install.sh | sh`)
 
-## ✨ Fitur
+---
 
-- **Unified gateway** — Antigravity + provider eksternal, satu endpoint, satu key `sk-local`.
-- **Provider auto-detect** — isi base URL + key, GravPool langsung cari model via `/models`.
-- **Refresh & quota otomatis** — token expired di-refresh otomatis, kuota live per akun.
-- **Auth verify** — token dites ke API quota setelah login → status "verified, N models".
-- **Combo routing** — gabungkan model dengan fallback/fusion otomatis (skip yang kuota habis).
-- **Dashboard Obsidian** — pemantauan kuota, token countdown, dan manajemen dalam satu panel.
+## Langkah pertama
 
-## 🔌 Cara pakai endpoint
+1. **Add Account** — login satu akun Google Antigravity. Sekali aja, lewat browser.
+2. **Add Provider** — (opsional) kalau punya API key lain seperti OpenAI/OpenRouter, tinggal isi base URL + key. Modelnya otomatis dideteksi.
+3. **Pakai endpoint-nya** — di aplikasi AI kamu, isi:
 
-```bash
-# di tool AI apa pun (OpenCode, Cline, Cursor, …)
-BASE_URL=http://127.0.0.1:8390/v1
-API_KEY=sk-local
-MODEL=muse            # dari provider eksternal
-MODEL=claude-sonnet-4-6   # dari akun Antigravity
+```
+Base URL : http://127.0.0.1:8390/v1
+API Key  : sk-local
 ```
 
-Config OpenCode siap pakai ada di [`examples/opencode.json`](examples/opencode.json),
-panduan di [`docs/opencode.md`](docs/opencode.md).
+Selesai. Semua akun kamu jalan di belakang satu alamat.
 
-## 🛠️ CLI
+---
+
+## Fitur
+
+- **Satu endpoint, semua akun** — gabung banyak akun Antigravity jadi satu gateway
+- **Refresh token otomatis** — token yang expired di-refresh sendiri, tanpa sentuh manual
+- **Kuota live** — sisa kuota tiap akun langsung kelihatan di dashboard
+- **Provider eksternal** — tambahkan API key lain (OpenAI, OpenRouter, endpoint custom) di gateway yang sama
+- **Combo routing** — gabungkan beberapa model jadi satu; kalau satu kehabisan kuota otomatis pindah ke cadangan
+- **Dashboard web** — semua kontrol dari browser, tidak perlu hafal perintah
+
+---
+
+## Perintah CLI
+
+Semua bisa lewat dashboard, tapi kalau suka terminal:
 
 ```bash
-gravpool status        # state token tiap akun
-gravpool quota         # snapshot kuota live
-gravpool refresh       # refresh semua token expired
-gravpool gui           # dashboard + gateway (default port 8390)
-gravpool add-account   # login akun Google baru (browser consent)
-gravpool combo         # kelola combo fallback/fusion
+gravpool gui           # jalankan dashboard + gateway
+gravpool status        # status token tiap akun
+gravpool quota         # cek kuota semua akun
+gravpool refresh       # refresh token yang expired
+gravpool add-account   # login akun Google baru
+gravpool combo         # kelola combo model
 ```
 
-Semua perintah menerima `--auth-dirs DIR [DIR ...]` untuk menunjuk lokasi auth file.
+---
 
-## 🏗️ Struktur
+## Update ke versi terbaru
+
+```bash
+curl -LsSf https://raw.githubusercontent.com/ghostedmyself/gravpool/main/install.sh | bash
+```
+
+Installer aman dijalankan ulang — data akun dan pengaturanmu **tidak** ikut berubah.
+
+---
+
+## Struktur proyek
 
 ```
 gravpool/
-├── gravpool/            # paket inti (stdlib only)
-│   ├── static/          #   UI dashboard (index.html, style.css, app.js)
-│   ├── web.py           #   dashboard + reverse-proxy /v1
-│   ├── providers.py     #   provider eksternal (auto-detect model)
-│   ├── quota.py         #   fetchAvailableModels live
-│   ├── store.py         #   auth file CLIProxyAPI-compatible
-│   ├── oauth.py         #   refresh / login
-│   ├── login_flow.py    #   OAuth consent + token save
-│   ├── proxy.py         #   CLIProxyAPI proxy binary supervisor
-│   ├── combo.py         #   combo virtual (fallback/fusion)
-│   ├── constants.py     #   config & path constants
-│   └── cli.py           #   antarmuka command-line
-├── docs/                # panduan install & integrasi
-├── examples/            # config siap pakai
-├── install.sh           # installer satu-perintah (fallback)
-└── bundle.py            # fetch CLIProxyAPI proxy binary
+├── gravpool/            # kode inti
+│   ├── static/          #   dashboard web (HTML/CSS/JS)
+│   ├── web.py           #   server + gateway /v1
+│   ├── providers.py     #   provider eksternal
+│   ├── quota.py         #   cek kuota live
+│   ├── oauth.py         #   login & refresh token
+│   ├── login_flow.py    #   alur login via browser
+│   ├── proxy.py         #   pengatur binary proxy
+│   ├── combo.py         #   combo model
+│   ├── store.py         #   penyimpanan akun
+│   ├── constants.py     #   pengaturan umum
+│   └── cli.py           #   perintah terminal
+├── docs/                # panduan lengkap
+├── examples/            # contoh konfigurasi
+├── install.sh           # installer
+└── bundle.py            # unduh binary pendukung
 ```
 
-## 📄 Lisensi
+---
+
+## Lisensi
 
 [MIT](LICENSE) © 2026 Omni.labs

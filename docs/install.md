@@ -1,90 +1,66 @@
-# Instalasi (1 Perintah)
+# Instalasi
 
-GravPool sekarang **bisa di-install sebagai package CLI** (seperti `npm install -g`),
-sekaligus tetap punya installer satu-perintah untuk yang tidak pakai uv/pip.
+Butuh **Python 3.9+** dan **Git**. Cek dulu: `python3 --version`
 
----
-
-## Cara A — uv / pip (direkomendasikan, seperti `npm install -g`)
-
-```bash
-# sekali saja kalau uv belum ada
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# install dari PyPI (setelah release) atau langsung dari repo lokal:
-uv tool install gravpool
-# ATAU
-uv tool install /path/ke/repo/gravpool
-
-# jalankan
-gravpool gui --port 8390
-```
-
-`uv tool install` memasang binary `gravpool` di PATH, dashboard + static assets
-ikut dibundle di dalam package — tidak perlu clone repo manual.
-
-> Tanpa uv tapi punya pipx: `pipx install gravpool`. Tanpa keduanya, pakai Cara B.
-
----
-
-## Cara B — installer satu-perintah (fallback)
+## Cara paling mudah
 
 ```bash
 curl -LsSf https://raw.githubusercontent.com/ghostedmyself/gravpool/main/install.sh | bash
 gravpool gui --port 8390
 ```
 
-Script ini:
-1. Clone/update repo ke `~/.local/share/gravpool`
-2. Fetch binary `cli-proxy-api` (idempotent — skip kalau sudah ada)
-3. Pasang launcher `gravpool` di `~/.local/bin`
-4. Cetak langkah selanjutnya
+Yang dilakukan script:
+1. Clone repo ke `~/.local/share/gravpool`
+2. Unduh binary pendukung `cli-proxy-api` (sekali; skip kalau sudah ada)
+3. Pasang perintah `gravpool` di `~/.local/bin`
+4. Dashboard siap jalan
 
-> **Windows:** jalankan `install.bat`, atau pakai WSL lalu perintah di atas.
+**Windows:** pakai WSL, atau jalankan `install.bat` setelah clone repo.
 
----
+## Pakai uv (opsional, lebih cepat)
 
-## Pakai
-
-**1. Login akun Google** (sekali, atau nambah akun kapan saja):
+Kalau suka pakai `uv` (pengelola paket Python modern):
 
 ```bash
-gravpool add-account
-```
+curl -LsSf https://astral.sh/uv/install.sh | sh      # sekali saja
+uv tool install gravpool                              # dari PyPI nanti
+# ATAU dari repo lokal:
+uv tool install /path/ke/gravpool
 
-*(Atau klik tombol **Add Account** langsung di dashboard.)*
-
-**2. Jalankan gateway + dashboard:**
-
-```bash
 gravpool gui --port 8390
 ```
 
-Ini memulai:
-- **Dashboard** — http://127.0.0.1:8390 (kelola akun, kuota, combo, provider)
-- **Endpoint OpenAI-compatible** — `http://127.0.0.1:8390/v1` dengan key `sk-local`
+Tanpa `uv` tapi punya `pipx`: `pipx install gravpool` juga bisa.
 
-## Update ke versi terbaru
+## Mulai pakai
+
+1. **Login akun Google**: `gravpool add-account` — atau klik **Add Account** di dashboard.
+2. **Jalankan**: `gravpool gui --port 8390`
+3. **Dashboard**: http://127.0.0.1:8390
+4. **Endpoint API**: `http://127.0.0.1:8390/v1` dengan key `sk-local`
+
+## Update
 
 ```bash
-uv tool upgrade gravpool        # Cara A
-# atau jalankan install.sh lagi (Cara B, idempotent)
+# cara installer:
+curl -LsSf https://raw.githubusercontent.com/ghostedmyself/gravpool/main/install.sh | bash
+# cara uv:
+uv tool upgrade gravpool
 ```
+
+Keduanya aman — akun dan pengaturan tidak berubah.
 
 ## FAQ
 
-**Butuh VPS?** Tidak. Semua jalan lokal dalam satu proses di port 8390.
+**Perlu VPS?** Tidak. Semua jalan di komputer sendiri, satu proses, port 8390.
 
-**Pakai /v1 dari klien AI (OpenCode/Cursor/Cline)?**
+**Mau pasang di aplikasi AI (OpenCode/Cursor/Cline)?**
 - Base URL: `http://127.0.0.1:8390/v1`
 - API Key: `sk-local`
 
-**Mau tambah model/provider eksternal?** Klik **Add Provider** di dashboard,
-isi base URL + API key, lalu Test Connection — model otomatis ter-detect dan
-langsung tersedia di endpoint yang sama.
+**Mau tambah model dari provider lain?** Klik **Add Provider** di dashboard, isi
+base URL + API key, lalu **Test Connection** — model otomatis ter-detect.
 
-**Proxy binary (`cli-proxy-api`) tidak ikut?** Benar — binary itu diperlakukan
-sebagai runtime optional (di-fetch `bundle.py` ke folder `bin/` di repo/install).
-Antigravity account pool dan semua provider eksternal tetap jalan tanpa binary
-(`--no-proxy`): yang berkurang hanya lapisan `/v1` buat Antigravity di depan
-binary. Bahwa dashboard + routing tetap penuh.
+**Binary `cli-proxy-api` tidak ikut terpasang?** Tenang — itu opsional. Tanpa
+binary, akun Antigravity dan semua provider eksternal tetap jalan, hanya lapisan
+`/v1` khusus Antigravity yang perlu binary. Dashboard dan routing tetap penuh.
