@@ -28,7 +28,7 @@ const UI = {
 };
 
 let state = {
-  apiKey: '***',
+  apiKey: '',
   pollingAuth: false
 };
 
@@ -70,7 +70,7 @@ const apiCall = async (url, options = {}) => {
   }
 };
 
-/* ─── Proxy status ─── */
+/* Proxy status */
 const loadProxy = async () => {
   try {
     const data = await apiCall('/api/proxy');
@@ -94,7 +94,7 @@ const loadProxy = async () => {
   }
 };
 
-/* ─── Accounts ─── */
+/* Accounts */
 const fmtExpiry = (isoStr) => {
   if (!isoStr) return '';
   try {
@@ -110,6 +110,7 @@ const fmtExpiry = (isoStr) => {
     return `in ${str}`;
   } catch { return ''; }
 };
+
 const fmtReset = (isoStr, verb = 'resets') => {
   if (!isoStr) return '';
   const rel = fmtExpiry(isoStr);
@@ -174,7 +175,7 @@ const renderAccounts = (statusData, quotaData) => {
     const isDisabling = acc.state !== 'disabled';
     const expiryInfo = fmtExpiry(acc.expired);
     const expiryHtml = expiryInfo
-      ? `<div class="token-expiry"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> token ${escapeHTML(expiryInfo)}</div>`
+      ? `<div class="token-expiry"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> token ${escapeHTML(expiryInfo)}</div>`
       : '';
 
     return `
@@ -184,7 +185,7 @@ const renderAccounts = (statusData, quotaData) => {
           <div class="card-actions">
             <span class="badge ${acc.state}">${acc.state}</span>
             <button class="btn-icon toggle-acc-btn" data-email="${escapeHTML(acc.email)}" data-disable="${isDisabling}" title="${toggleAction}" aria-label="${toggleAction} account">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 ${isDisabling ? '<path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line>' : '<polygon points="5 3 19 12 5 21 5 3"></polygon>'}
               </svg>
             </button>
@@ -217,7 +218,7 @@ const renderAccounts = (statusData, quotaData) => {
   });
 };
 
-/* ─── Models ─── */
+/* Models */
 const loadModels = async () => {
   try {
     const [proxyRes, extRes] = await Promise.all([
@@ -230,12 +231,12 @@ const loadModels = async () => {
       .map(m => ({ id: m.id, source: m.provider || 'external' }));
     const all = [...proxyModels, ...extModels];
     if (!all.length) {
-      UI.modelsGrid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;">Belum ada model.</div>`;
+      UI.modelsGrid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;">No models found.</div>`;
       UI.modelsCount.textContent = '0';
       return;
     }
-    UI.modelsCount.textContent = `${all.length} model${all.length === 1 ? '' : 's'}`;
-    // Group by source so the list reads as "Antigravity pool" + per-provider, not a flat wall.
+    UI.modelsCount.textContent = `${all.length}`;
+    
     const bySource = {};
     for (const m of all) {
       (bySource[m.source] = bySource[m.source] || []).push(m.id);
@@ -243,7 +244,7 @@ const loadModels = async () => {
     const order = ['antigravity', ...Object.keys(bySource).filter(s => s !== 'antigravity').sort()];
     UI.modelsGrid.innerHTML = order.map(src => {
       const ids = bySource[src];
-      const label = src === 'antigravity' ? 'Antigravity pool' : src;
+      const label = src === 'antigravity' ? 'Antigravity Pool' : src;
       return `
         <div class="model-group" data-source="${escapeHTML(src)}">
           <div class="model-group-head">
@@ -262,22 +263,13 @@ const loadModels = async () => {
   }
 };
 
-/* Bento tile cursor shine — drive --gx/--gy per tile from mousemove */
-UI.modelsGrid.addEventListener('mousemove', (e) => {
-  const tile = e.target.closest('.model-group');
-  if (!tile) return;
-  const r = tile.getBoundingClientRect();
-  tile.style.setProperty('--gx', `${((e.clientX - r.left) / r.width) * 100}%`);
-  tile.style.setProperty('--gy', `${((e.clientY - r.top) / r.height) * 100}%`);
-});
-
-/* ─── External Providers ─── */
+/* External Providers */
 const loadProviders = async () => {
-  UI.providersContainer.innerHTML = `<div class="skeleton-card"></div><div class="skeleton-card"></div>`;
+  UI.providersContainer.innerHTML = `<div class="empty-state skeleton">Loading...</div>`;
   try {
     const providers = await apiCall('/api/providers');
     if (providers.length === 0) {
-      UI.providersContainer.innerHTML = `<div class="empty-state">No external providers. Add one to route models like gpt-4o through GravPool.</div>`;
+      UI.providersContainer.innerHTML = `<div class="empty-state">No external providers configured.</div>`;
       return;
     }
     UI.providersContainer.innerHTML = providers.map(p => `
@@ -289,12 +281,12 @@ const loadProviders = async () => {
           </div>
           <div style="display:flex; gap:4px;">
             <button class="btn-icon toggle-provider-btn" data-name="${escapeHTML(p.name)}" data-enabled="${p.enabled}" title="${p.enabled ? 'Disable' : 'Enable'}">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 ${p.enabled ? '<path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line>' : '<polygon points="5 3 19 12 5 21 5 3"></polygon>'}
               </svg>
             </button>
             <button class="btn-icon delete-provider-btn" data-name="${escapeHTML(p.name)}" title="Delete">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
           </div>
         </div>
@@ -339,7 +331,7 @@ const loadProviders = async () => {
   }
 };
 
-/* ─── Provider Form ─── */
+/* Provider Form */
 UI.addProviderBtn.addEventListener('click', () => {
   UI.providerForm.reset();
   UI.providerTestResult.innerHTML = '';
@@ -359,20 +351,18 @@ UI.testProviderBtn.addEventListener('click', async () => {
     return;
   }
   UI.testProviderBtn.disabled = true;
-  UI.providerTestResult.innerHTML = `<span class="text-dim">Testing...</span>`;
+  UI.providerTestResult.innerHTML = `<span class="text-dim">Testing connection...</span>`;
   const tmpName = name || '_test';
   
   try {
     let testRes;
     try {
-      // Direct approach first
       testRes = await apiCall('/api/providers/test', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({ base_url: baseUrl, api_key: apiKey })
       });
     } catch (e) {
-      // Fallback approach if backend doesn't support direct
       const res = await apiCall('/api/providers', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -386,7 +376,6 @@ UI.testProviderBtn.addEventListener('click', async () => {
         body: JSON.stringify({ name: tmpName })
       });
       
-      // Clean up temp provider
       try {
         await apiCall(`/api/providers/${encodeURIComponent(tmpName)}`, { method: 'DELETE' });
       } catch {}
@@ -394,7 +383,7 @@ UI.testProviderBtn.addEventListener('click', async () => {
     
     if (testRes.ok) {
       const models = testRes.models || [];
-      UI.providerTestResult.innerHTML = `<span class="text-ok">Connected - ${models.length} models auto-detected</span>`;
+      UI.providerTestResult.innerHTML = `<span class="text-ok">Connected - ${models.length} models detected</span>`;
     } else {
       UI.providerTestResult.innerHTML = `<span class="text-err">Connection failed</span>`;
     }
@@ -402,8 +391,7 @@ UI.testProviderBtn.addEventListener('click', async () => {
     const m = err.message || 'Test failed';
     let hint = '';
     if (/401|403/.test(m)) hint = ' - check API key';
-    else if (/404/.test(m)) hint = ' - check base URL (try ending with /v1)';
-    else if (/timed out|timeout/i.test(m)) hint = ' - provider unreachable';
+    else if (/404/.test(m)) hint = ' - check base URL';
     UI.providerTestResult.innerHTML = `<span class="text-err">${escapeHTML(m)}${hint}</span>`;
   } finally {
     UI.testProviderBtn.disabled = false;
@@ -437,25 +425,28 @@ UI.providerForm.addEventListener('submit', async (e) => {
   }
 });
 
-/* ─── Combos ─── */
+/* Combos */
 const renderCombos = async () => {
   try {
     const combos = await apiCall('/api/combos');
     if (combos.length === 0) {
-      UI.combosContainer.innerHTML = `<div class="empty-state">No combos.</div>`;
+      UI.combosContainer.innerHTML = `<div class="empty-state">No combos created.</div>`;
       return;
     }
 
     UI.combosContainer.innerHTML = combos.map(c => `
       <div class="card combo-card" data-name="${escapeHTML(c.name)}">
-        <div class="card-row" style="margin-bottom:0.375rem">
-          <div class="card-email">${escapeHTML(c.name)} <span class="badge ${c.kind}">${c.kind}</span></div>
+        <div class="card-row" style="margin-bottom:0.5rem">
+          <div class="card-email">
+            ${escapeHTML(c.name)} 
+            <span class="badge ${c.kind}">${c.kind}</span>
+          </div>
           <button class="btn-icon delete-combo-btn" data-name="${escapeHTML(c.name)}" aria-label="Delete combo">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>
         </div>
         <div class="combo-models">${escapeHTML(c.models.join(', '))}</div>
-        <div class="combo-resolve skeleton-text" style="width:100%"></div>
+        <div class="combo-resolve skeleton-text" style="width:100%">Resolving...</div>
       </div>
     `).join('');
 
@@ -484,7 +475,7 @@ const renderCombos = async () => {
           const fallback = (res.fallback || []).join(', ');
           const drained = (res.drained || []).join(', ');
           let html = `<span class="text-ok">→ ${escapeHTML(String(picked))}</span>`;
-          if (fallback) html += ` <span class="text-warn">· fb: ${escapeHTML(fallback)}</span>`;
+          if (fallback) html += ` <span class="text-warn">· fallback: ${escapeHTML(fallback)}</span>`;
           if (drained) html += ` <span class="text-dim">· drained: ${escapeHTML(drained)}</span>`;
           resDiv.innerHTML = html;
         } else {
@@ -502,7 +493,7 @@ const renderCombos = async () => {
   }
 };
 
-/* ─── Data loaders ─── */
+/* Data loaders */
 const loadData = async () => {
   try {
     const [statusData, quotaData] = await Promise.all([
@@ -515,7 +506,7 @@ const loadData = async () => {
   }
 };
 
-/* ─── Actions ─── */
+/* Actions */
 UI.copyBtn.addEventListener('click', () => {
   if (navigator.clipboard) {
     navigator.clipboard.writeText(state.apiKey).then(() => showToast('API key copied'));
@@ -546,7 +537,7 @@ UI.reloadQuotaBtn.addEventListener('click', async () => {
   UI.reloadQuotaBtn.disabled = true;
   try {
     await Promise.all([loadData(), loadModels()]);
-    showToast('Reloaded');
+    showToast('Reloaded data');
   } finally {
     UI.reloadQuotaBtn.disabled = false;
   }
@@ -578,22 +569,25 @@ UI.comboForm.addEventListener('submit', async (e) => {
   }
 });
 
-/* ─── Add Account Flow ─── */
+/* Add Account Flow */
 UI.addAccountBtn.addEventListener('click', () => {
   UI.addAccountDialog.showModal();
-  UI.addAccountState.innerHTML = `<button id="start-add-account" class="btn btn-primary btn-block">Generate Auth Link</button>`;
+  UI.addAccountState.innerHTML = `<button id="start-add-account" class="btn btn-primary" style="width:100%">Generate Auth Link</button>`;
   document.getElementById('start-add-account').addEventListener('click', async (e) => {
     e.currentTarget.disabled = true;
     try {
       const res = await apiCall('/api/add-account', { method: 'POST' });
       UI.addAccountState.innerHTML = `
         <a href="${escapeHTML(res.url)}" target="_blank" class="auth-link">Open Authorization Link →</a>
-        <div class="mono text-dim" style="font-size:0.8125rem; text-align:center;">Waiting for authorization…</div>
+        <div class="text-dim" style="font-size:0.8125rem; text-align:center;">Waiting for authorization...</div>
       `;
       state.pollingAuth = true;
       pollAddAccount();
     } catch (err) {
-      UI.addAccountState.innerHTML = `<div class="inline-err" style="text-align:center; display:block; margin-bottom:0.5rem;">Failed to start flow.</div> <button id="retry-add-acc" class="btn btn-block">Retry</button>`;
+      UI.addAccountState.innerHTML = `
+        <div class="inline-err" style="text-align:center; display:block; margin-bottom:0.5rem;">Failed to start flow.</div> 
+        <button id="retry-add-acc" class="btn btn-secondary" style="width:100%">Retry</button>
+      `;
       document.getElementById('retry-add-acc').addEventListener('click', () => UI.addAccountBtn.click());
     }
   });
@@ -624,7 +618,7 @@ const pollAddAccount = async () => {
   setTimeout(pollAddAccount, 2000);
 };
 
-/* ─── Init ─── */
+/* Init */
 const init = async () => {
   await Promise.all([loadProxy(), loadData(), renderCombos(), loadModels(), loadProviders()]).catch(() => {});
   setInterval(loadData, 60000);

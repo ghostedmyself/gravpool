@@ -3,188 +3,175 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GravPool</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Gravpool Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 </head>
 <body>
-  <!-- Ambient background blobs (glass/soft-UI depth) -->
-  <div class="bg-ambient" aria-hidden="true">
-    <div class="blob blob-1"></div>
-    <div class="blob blob-2"></div>
-    <div class="blob blob-3"></div>
-    <div class="blob blob-4"></div>
-    <div class="grain"></div>
+  <div id="toast-container" class="toast-container"></div>
+  
+  <div class="app-layout">
+    <header class="app-header">
+      <div class="header-content">
+        <div class="header-left">
+          <h1 class="logo">gravpool</h1>
+          <div id="proxy-status" class="status-pill skeleton">
+            <span class="status-dot"></span>
+            <span class="status-text">Loading</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <div class="endpoint-box">
+            <span id="proxy-endpoint" class="endpoint-url skeleton-text">Loading endpoint...</span>
+            <button id="copy-key-btn" class="btn btn-secondary btn-icon" disabled aria-label="Copy API Key" title="Copy API Key">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+          </div>
+          <button id="reload-quota-btn" class="btn btn-secondary btn-icon" title="Reload Data">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <main class="app-main">
+      <div class="stats-strip">
+        <div class="stat-box">
+          <span class="stat-label">Total Accounts</span>
+          <span id="stat-total" class="stat-value">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Active / OK</span>
+          <span id="stat-ok" class="stat-value text-ok">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Expired Tokens</span>
+          <span id="stat-expired" class="stat-value text-warn">0</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-label">Disabled</span>
+          <span id="stat-disabled" class="stat-value text-dim">0</span>
+        </div>
+      </div>
+
+      <div class="grid-layout">
+        <!-- Accounts Column -->
+        <div class="layout-col">
+          <section class="section">
+            <div class="section-header">
+              <h2 class="section-title">Accounts</h2>
+              <div class="section-actions">
+                <button id="refresh-all-btn" class="btn btn-secondary btn-sm">Force Refresh</button>
+                <button id="add-account-btn" class="btn btn-primary btn-sm">Add Account</button>
+              </div>
+            </div>
+            <div id="accounts-container" class="cards-list">
+              <div class="empty-state">Loading accounts...</div>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section-header">
+              <h2 class="section-title">Combos / Routing</h2>
+            </div>
+            <div class="combo-form-wrap">
+              <form id="combo-form" class="inline-form">
+                <input type="text" id="combo-name" class="input input-sm" placeholder="Name (e.g. gpt-4)" required>
+                <select id="combo-kind" class="input input-sm">
+                  <option value="fallback">Fallback</option>
+                  <option value="round-robin">Round Robin</option>
+                  <option value="parallel">Parallel</option>
+                </select>
+                <input type="text" id="combo-models" class="input input-sm" placeholder="Models (comma separated)" required style="flex:1;">
+                <button type="submit" class="btn btn-secondary btn-sm">Create</button>
+              </form>
+            </div>
+            <div id="combos-container" class="cards-list" style="margin-top: 1rem;">
+              <div class="empty-state">Loading combos...</div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Providers & Models Column -->
+        <div class="layout-col">
+          <section class="section">
+            <div class="section-header">
+              <h2 class="section-title">External Providers</h2>
+              <div class="section-actions">
+                <button id="add-provider-btn" class="btn btn-primary btn-sm">Add Provider</button>
+              </div>
+            </div>
+            <div id="providers-container" class="cards-list">
+              <div class="empty-state">Loading providers...</div>
+            </div>
+          </section>
+
+          <section class="section">
+            <div class="section-header">
+              <h2 class="section-title">Available Models</h2>
+              <span id="models-count" class="badge">0</span>
+            </div>
+            <div id="models-grid" class="models-grid">
+              <div class="empty-state" style="grid-column: 1/-1;">Loading models...</div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
   </div>
 
-  <!-- Toasts -->
-  <div id="toast-container" class="toast-container" aria-live="polite"></div>
-
-  <!-- Header -->
-  <header class="topbar">
-    <div class="topbar-brand">
-      <svg class="brand-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0H5a2 2 0 0 1-2-2v-4m6 6h6m6 0h4a2 2 0 0 0 2-2v-4m-6 6V3"></path>
-      </svg>
-      <span class="brand-name">GravPool</span>
-    </div>
-    <div class="topbar-right">
-      <div id="proxy-status" class="proxy-pill skeleton">
-        <span class="status-dot"></span>
-        <span class="status-text">Checking</span>
-      </div>
-      <div class="endpoint-group" id="endpoint-group">
-        <code id="proxy-endpoint" class="endpoint-url skeleton-text"></code>
-        <button id="copy-key-btn" class="btn btn-icon" aria-label="Copy API Key" disabled>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-          </svg>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <main class="container">
-    <!-- Stats Strip -->
-    <section class="stats-strip glass">
-      <div class="stat">
-        <span class="stat-num" id="stat-total">—</span>
-        <span class="stat-lbl">Accounts</span>
-      </div>
-      <div class="stat-divider"></div>
-      <div class="stat">
-        <span class="stat-num text-ok" id="stat-ok">—</span>
-        <span class="stat-lbl">OK</span>
-      </div>
-      <div class="stat-divider"></div>
-      <div class="stat">
-        <span class="stat-num text-warn" id="stat-expired">—</span>
-        <span class="stat-lbl">Expired</span>
-      </div>
-      <div class="stat-divider"></div>
-      <div class="stat">
-        <span class="stat-num text-dim" id="stat-disabled">—</span>
-        <span class="stat-lbl">Disabled</span>
-      </div>
-      <div class="stats-actions">
-        <button id="refresh-all-btn" class="btn">Refresh All</button>
-        <button id="add-account-btn" class="btn btn-primary">Add Account</button>
-      </div>
-    </section>
-
-    
-
-    <section class="providers-section glass-panel">
-      <div class="col-header">
-        <h2>External Providers</h2>
-        <button id="add-provider-btn" class="btn btn-primary">Add Provider</button>
-      </div>
-      <div id="providers-container" class="providers-list">
-        <div class="skeleton-card"></div>
-        <div class="skeleton-card"></div>
-      </div>
-    </section>
-    <!-- Two-column layout: Accounts & Combos -->
-    <div class="grid-main">
-      <!-- Accounts Column -->
-      <section class="col-accounts glass-panel">
-        <div class="col-header">
-          <h2>Accounts</h2>
-          <button id="reload-quota-btn" class="btn btn-ghost">Reload</button>
-        </div>
-        <div id="accounts-container" class="acc-list">
-          <div class="skeleton-card"></div>
-          <div class="skeleton-card"></div>
-        </div>
-      </section>
-
-      <!-- Combos Column -->
-      <section class="col-combos glass-panel">
-        <div class="col-header">
-          <h2>Combos</h2>
-        </div>
-        <form id="combo-form" class="combo-form">
-          <input type="text" id="combo-name" placeholder="name" required>
-          <select id="combo-kind" required aria-label="Combo Kind">
-            <option value="fallback">Fallback</option>
-            <option value="fusion">Fusion</option>
-          </select>
-          <input type="text" id="combo-models" placeholder="model-a, model-b" required>
-          <button type="submit" class="btn btn-primary">Create</button>
-        </form>
-        <div id="combos-container" class="combo-list">
-          <div class="skeleton-card"></div>
-        </div>
-      </section>
-    </div>
-    <!-- Models Section -->
-    <section class="models-section glass-panel">
-      <div class="col-header">
-        <h2>Available Models</h2>
-        <span class="models-count" id="models-count">—</span>
-      </div>
-      <div id="models-grid" class="models-grid">
-        <div class="skeleton-card"></div>
-      </div>
-    </section>
-  </main>
-
-  <!-- Add Account Dialog -->
-  <dialog id="add-account-dialog" class="dialog" aria-labelledby="add-account-title">
+  <!-- Dialogs -->
+  <dialog id="add-account-dialog" class="dialog">
     <div class="dialog-content">
       <div class="dialog-header">
-        <h2 id="add-account-title">Add Account</h2>
-        <button id="close-add-account" class="btn btn-icon" aria-label="Close">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
+        <h3 class="dialog-title">Add Antigravity Account</h3>
+        <button id="close-add-account" class="btn-icon close-dialog" aria-label="Close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
-      <div id="add-account-state" class="dialog-body">
-        <button id="start-add-account" class="btn btn-primary btn-block">Generate Auth Link</button>
+      <div class="dialog-body">
+        <p class="text-dim" style="margin-bottom: 1.5rem; font-size: 0.875rem;">Authorize a new Antigravity account to add it to the pool.</p>
+        <div id="add-account-state" class="auth-state-container">
+          <!-- Populated by JS -->
+        </div>
       </div>
     </div>
   </dialog>
 
-  <!-- Add Provider Dialog -->
-  <dialog id="add-provider-dialog" class="dialog" aria-labelledby="add-provider-title">
+  <dialog id="add-provider-dialog" class="dialog">
     <div class="dialog-content">
       <div class="dialog-header">
-        <h2 id="add-provider-title">Add External Provider</h2>
-        <button id="close-add-provider" class="btn btn-icon" aria-label="Close">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
+        <h3 class="dialog-title">Add External Provider</h3>
+        <button id="close-add-provider" class="btn-icon close-dialog" aria-label="Close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
       <div class="dialog-body">
-        <form id="provider-form" class="provider-form">
-          <label class="form-label">
-            <span>Name</span>
-            <input type="text" id="provider-name" placeholder="openai" required pattern="[a-zA-Z0-9._-]+">
-          </label>
-          <label class="form-label">
-            <span>Base URL</span>
-            <input type="text" id="provider-base-url" placeholder="https://api.openai.com/v1" required>
-          </label>
-          <label class="form-label">
-            <span>API Key</span>
-            <input type="password" id="provider-api-key" placeholder="sk-..." required autocomplete="off">
-          </label>
+        <form id="provider-form" class="form-stacked">
+          <div class="form-group">
+            <label for="provider-name" class="label">Provider Name</label>
+            <input type="text" id="provider-name" class="input" placeholder="e.g. OpenAI, Groq, Together" required>
+          </div>
+          <div class="form-group">
+            <label for="provider-base-url" class="label">Base URL</label>
+            <input type="url" id="provider-base-url" class="input" placeholder="https://api.openai.com/v1" required>
+          </div>
+          <div class="form-group">
+            <label for="provider-api-key" class="label">API Key</label>
+            <input type="password" id="provider-api-key" class="input" placeholder="sk-..." required>
+          </div>
           
-          <div id="provider-test-result" class="provider-test-result"></div>
+          <div id="provider-test-result" class="test-result-box"></div>
           
           <div class="dialog-actions">
-            <button type="button" id="test-provider-btn" class="btn">Test Connection</button>
-            <button type="submit" class="btn btn-primary">Add</button>
+            <button type="button" id="test-provider-btn" class="btn btn-secondary">Test Connection</button>
+            <button type="submit" class="btn btn-primary">Add Provider</button>
           </div>
         </form>
       </div>
     </div>
   </dialog>
 
-  <script src="app.js"></script>
+  <script src="/static/app.js"></script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 <p align="center">
+  <img src="https://img.shields.io/npm/v/gravpool" alt="npm package">
   <img src="https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white" alt="Python 3.9+">
   <img src="https://img.shields.io/badge/stdlib-only-0f766e" alt="stdlib only">
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT">
