@@ -1,10 +1,10 @@
 :root {
   /* Black Gold / Obsidian Palette */
   --bg-base: #0a0908;
-  --bg-surface: #100d0b;
-  --bg-card: #1a1612;
-  --bg-card-hover: #221c16;
-  --bg-hover: #2a2218;
+  --bg-surface: #171310;
+  --bg-card: #221c15;
+  --bg-card-hover: #2b2419;
+  --bg-hover: #352a1c;
   
   --border-subtle: #221c16;
   --border-main: #332a1e;
@@ -48,7 +48,11 @@
 }
 
 body {
-  background-color: var(--bg-base);
+  background-color: #171310;
+  background-image:
+    radial-gradient(120% 100% at 8% 0%, rgba(214, 156, 64, 0.30), transparent 58%),
+    radial-gradient(120% 100% at 100% 18%, rgba(190, 112, 52, 0.26), transparent 58%),
+    radial-gradient(100% 85% at 50% 100%, rgba(150, 100, 210, 0.30), transparent 62%);
   color: var(--text-main);
   font-family: var(--font-sans);
   line-height: 1.5;
@@ -67,30 +71,40 @@ body {
   z-index: 0;
   pointer-events: none;
   overflow: hidden;
+  background:
+    radial-gradient(120% 90% at 20% 0%, rgba(212,164,67,0.16), transparent 55%),
+    radial-gradient(110% 90% at 90% 100%, rgba(184,115,51,0.14), transparent 55%),
+    radial-gradient(90% 70% at 50% 50%, rgba(30,24,16,0.35), transparent 70%);
 }
 .blob {
   position: absolute;
   border-radius: 50%;
-  filter: blur(90px);
-  opacity: 0.5;
+  filter: blur(80px);
+  opacity: 0.85;
 }
 .blob-1 {
-  width: 48vw; height: 48vw;
-  top: -18vw; left: -12vw;
-  background: radial-gradient(circle at center, rgba(212,164,67,0.16), transparent 70%);
+  width: 52vw; height: 52vw;
+  top: -20vw; left: -14vw;
+  background: radial-gradient(circle at center, rgba(255,196,87,0.55), rgba(212,164,67,0.22) 45%, transparent 70%);
   animation: drift 26s ease-in-out infinite alternate;
 }
 .blob-2 {
-  width: 42vw; height: 42vw;
-  top: 32vh; right: -16vw;
-  background: radial-gradient(circle at center, rgba(184,115,51,0.14), transparent 70%);
+  width: 46vw; height: 46vw;
+  top: 30vh; right: -18vw;
+  background: radial-gradient(circle at center, rgba(255,152,84,0.45), rgba(184,115,51,0.25) 45%, transparent 70%);
   animation: drift 32s ease-in-out infinite alternate-reverse;
 }
 .blob-3 {
-  width: 36vw; height: 36vw;
-  bottom: -14vw; left: 30vw;
-  background: radial-gradient(circle at center, rgba(212,164,67,0.10), transparent 70%);
+  width: 40vw; height: 40vw;
+  bottom: -16vw; left: 28vw;
+  background: radial-gradient(circle at center, rgba(255,210,120,0.40), rgba(212,164,67,0.18) 45%, transparent 70%);
   animation: drift 38s ease-in-out infinite alternate;
+}
+.blob-4 {
+  width: 34vw; height: 34vw;
+  top: 10vh; left: 40vw;
+  background: radial-gradient(circle at center, rgba(120,90,255,0.30), rgba(90,60,220,0.14) 45%, transparent 70%);
+  animation: drift 44s ease-in-out infinite alternate-reverse;
 }
 @keyframes drift {
   from { transform: translate(0, 0) scale(1); }
@@ -106,23 +120,23 @@ body {
 
 /* Glass panels — frosted translucent, layered border + inner highlight */
 .glass {
-  background: rgba(255, 255, 255, 0.045);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
-  backdrop-filter: blur(18px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.09);
+  -webkit-backdrop-filter: blur(18px) saturate(170%);
+  backdrop-filter: blur(18px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 8px 32px rgba(0, 0, 0, 0.16);
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 8px 32px rgba(0, 0, 0, 0.18);
 }
 .glass-panel {
-  background: rgba(255, 255, 255, 0.04);
-  -webkit-backdrop-filter: blur(24px) saturate(140%);
-  backdrop-filter: blur(24px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.085);
+  -webkit-backdrop-filter: blur(26px) saturate(180%);
+  backdrop-filter: blur(26px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: var(--radius-lg);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    0 12px 40px -8px rgba(0, 0, 0, 0.35);
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
+    0 18px 48px -12px rgba(0, 0, 0, 0.45);
 }
 /* Solid fallback when backdrop-filter unavailable or reduced transparency */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
@@ -567,12 +581,12 @@ h1, h2, h3, h4, h5, h6 {
   flex-direction: column;
   border-radius: var(--radius-lg);
   padding: 1.125rem;
-  background: rgba(255, 255, 255, 0.04);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
-  backdrop-filter: blur(18px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.085);
+  -webkit-backdrop-filter: blur(18px) saturate(170%);
+  backdrop-filter: blur(18px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10),
     0 10px 32px -10px rgba(0, 0, 0, 0.5);
   overflow: hidden;
   transition: transform var(--transition-normal), border-color var(--transition-fast), box-shadow var(--transition-normal);
