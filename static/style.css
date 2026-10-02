@@ -205,6 +205,14 @@ h2 { font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.08em; co
 
 .quota-reset { color: var(--text-dim); font-size: 0.625rem; }
 
+/* ─── Token Expiry ─── */
+.token-expiry {
+  display: flex; align-items: center; gap: 0.3rem;
+  font-size: 0.6875rem; font-family: var(--font-mono); color: var(--text-mut);
+  margin-bottom: 0.5rem; padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
 .inline-err { color: var(--err); font-size: 0.6875rem; font-family: var(--font-mono); }
 .empty-state {
   padding: 2rem 1rem; text-align: center; color: var(--text-dim);

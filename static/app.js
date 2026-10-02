@@ -80,6 +80,22 @@ const loadProxy = async () => {
 };
 
 /* ─── Accounts ─── */
+const fmtExpiry = (isoStr) => {
+  if (!isoStr) return '';
+  try {
+    const d = new Date(isoStr);
+    const now = new Date();
+    const diffMs = d - now;
+    const absMin = Math.abs(diffMs / 60000);
+    let str;
+    if (absMin < 60) str = `${Math.round(absMin)}m`;
+    else if (absMin < 1440) str = `${(absMin / 60).toFixed(1)}h`;
+    else str = `${(absMin / 1440).toFixed(1)}d`;
+    if (diffMs < 0) return `expired ${str} ago`;
+    return `refresh in ${str}`;
+  } catch { return ''; }
+};
+
 const renderAccounts = (statusData, quotaData) => {
   UI.statTotal.textContent = statusData.length;
   UI.statOk.textContent = statusData.filter(a => a.state === 'ok').length;
@@ -127,6 +143,10 @@ const renderAccounts = (statusData, quotaData) => {
 
     const toggleAction = acc.state === 'disabled' ? 'Enable' : 'Disable';
     const isDisabling = acc.state !== 'disabled';
+    const expiryInfo = fmtExpiry(acc.expired);
+    const expiryHtml = expiryInfo
+      ? `<div class="token-expiry"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> ${escapeHTML(expiryInfo)}</div>`
+      : '';
 
     return `
       <div class="card">
@@ -141,6 +161,7 @@ const renderAccounts = (statusData, quotaData) => {
             </button>
           </div>
         </div>
+        ${expiryHtml}
         ${quotaHtml}
       </div>
     `;
