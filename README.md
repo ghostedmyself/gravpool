@@ -10,7 +10,8 @@
 kelola akun Google Antigravity Pro · tambah provider eksternal · dashboard web</p>
 
 <p align="center">
-  <code>curl -LsSf https://raw.githubusercontent.com/ghostedmyself/gravpool/main/install.sh | bash</code>
+  <code>uv tool install gravpool</code> <span>·</span> <code>gravpool gui</code><br>
+  <small>atau satu-perintah: <code>curl -LsSf https://raw.githubusercontent.com/ghostedmyself/gravpool/main/install.sh | bash</code></small>
 </p>
 
 ---

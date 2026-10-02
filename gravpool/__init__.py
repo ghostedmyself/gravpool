@@ -5,4 +5,4 @@ refreshable credential pool with live quota reporting. Designed to sit in
 front of (or alongside) CLIProxyAPI auth dirs.
 """
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
