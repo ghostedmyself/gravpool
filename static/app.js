@@ -106,9 +106,15 @@ const fmtExpiry = (isoStr) => {
     if (absMin < 60) str = `${Math.round(absMin)}m`;
     else if (absMin < 1440) str = `${(absMin / 60).toFixed(1)}h`;
     else str = `${(absMin / 1440).toFixed(1)}d`;
-    if (diffMs < 0) return `expired ${str} ago`;
-    return `refresh in ${str}`;
+    if (diffMs < 0) return `${str} ago`;
+    return `in ${str}`;
   } catch { return ''; }
+};
+const fmtReset = (isoStr, verb = 'resets') => {
+  if (!isoStr) return '';
+  const rel = fmtExpiry(isoStr);
+  if (!rel) return '';
+  return rel.startsWith('in ') ? `${verb} ${rel}` : rel;
 };
 
 const renderAccounts = (statusData, quotaData) => {
@@ -146,7 +152,7 @@ const renderAccounts = (statusData, quotaData) => {
 
       quotaHtml = groups.map(g => {
         const colorClass = g.pct < 20 ? 'low' : g.pct < 50 ? 'mid' : 'high';
-        const resetStr = g.reset ? `<span class="quota-reset">reset ${escapeHTML(g.reset)}</span>` : '';
+        const resetStr = g.reset ? `<span class="quota-reset">${escapeHTML(fmtReset(g.reset))}</span>` : '';
         const modelStr = g.count === 1 ? '1 model' : `${g.count} models`;
         return `
           <div class="quota-item">
@@ -168,7 +174,7 @@ const renderAccounts = (statusData, quotaData) => {
     const isDisabling = acc.state !== 'disabled';
     const expiryInfo = fmtExpiry(acc.expired);
     const expiryHtml = expiryInfo
-      ? `<div class="token-expiry"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> ${escapeHTML(expiryInfo)}</div>`
+      ? `<div class="token-expiry"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> token ${escapeHTML(expiryInfo)}</div>`
       : '';
 
     return `
@@ -218,31 +224,35 @@ const loadModels = async () => {
       apiCall('/api/models').catch(() => ({ data: [] })),
       apiCall('/api/providers/models').catch(() => ({ data: [] }))
     ]);
-    const proxyModels = (proxyRes.data || []).filter(m => m && m.id);
-    const extModels = (extRes.data || []).filter(m => m && m.id);
-    const all = [
-      ...proxyModels.map(m => ({ id: m.id, vendor: m.owned_by || 'antigravity', source: 'antigravity' })),
-      ...extModels.map(m => ({ id: m.id, vendor: m.provider || 'external', source: 'external' })),
-    ];
+    const proxyModels = (proxyRes.data || []).filter(m => m && m.id)
+      .map(m => ({ id: m.id, source: 'antigravity' }));
+    const extModels = (extRes.data || []).filter(m => m && m.id)
+      .map(m => ({ id: m.id, source: m.provider || 'external' }));
+    const all = [...proxyModels, ...extModels];
     if (!all.length) {
-      UI.modelsGrid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;">No models — proxy offline.</div>`;
+      UI.modelsGrid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;">Belum ada model.</div>`;
       UI.modelsCount.textContent = '0';
       return;
     }
-    UI.modelsCount.textContent = `${all.length} models`;
-    UI.modelsGrid.innerHTML = all.map(m => {
-      let vendor = m.vendor;
-      if (m.source === 'antigravity') {
-        if (m.id.startsWith('gemini')) vendor = 'gemini';
-        else if (m.id.startsWith('claude')) vendor = 'claude';
-        else if (m.id.startsWith('gpt')) vendor = 'gpt';
-      } else {
-        vendor = m.vendor;
-      }
+    UI.modelsCount.textContent = `${all.length} model${all.length === 1 ? '' : 's'}`;
+    // Group by source so the list reads as "Antigravity pool" + per-provider, not a flat wall.
+    const bySource = {};
+    for (const m of all) {
+      (bySource[m.source] = bySource[m.source] || []).push(m.id);
+    }
+    const order = ['antigravity', ...Object.keys(bySource).filter(s => s !== 'antigravity').sort()];
+    UI.modelsGrid.innerHTML = order.map(src => {
+      const ids = bySource[src];
+      const label = src === 'antigravity' ? 'Antigravity pool' : src;
       return `
-        <div class="model-card" title="${escapeHTML(m.id)}">
-          <div class="model-id">${escapeHTML(m.id)}</div>
-          <div class="model-vendor">${escapeHTML(vendor)}</div>
+        <div class="model-group" data-source="${escapeHTML(src)}">
+          <div class="model-group-head">
+            <span class="model-group-name">${escapeHTML(label)}</span>
+            <span class="model-group-count">${ids.length}</span>
+          </div>
+          <div class="model-group-chips">
+            ${ids.map(id => `<span class="model-chip" title="${escapeHTML(id)}">${escapeHTML(id)}</span>`).join('')}
+          </div>
         </div>
       `;
     }).join('');

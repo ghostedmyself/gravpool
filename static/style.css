@@ -467,26 +467,55 @@ h1, h2, h3, h4, h5, h6 {
   margin-bottom: 1rem;
 }
 .models-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
-.model-card {
-  background-color: var(--bg-surface);
+.model-group {
+  background-color: var(--bg-card);
   border: 1px solid var(--border-main);
   border-radius: var(--radius-md);
-  padding: 0.75rem;
+  padding: 1rem;
 }
-.model-id {
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
+.model-group-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+.model-group-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
   color: var(--text-main);
-  word-break: break-all;
 }
-.model-vendor {
+.model-group-count {
+  font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--text-muted);
-  margin-top: 0.25rem;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-main);
+  border-radius: 999px;
+  padding: 0.1rem 0.6rem;
+}
+.model-group-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.model-chip {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-main);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-main);
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  cursor: default;
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+.model-chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* Dialog */
