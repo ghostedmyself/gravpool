@@ -50,7 +50,7 @@ Ini akan memulai:
 ## FAQ
 
 **Apakah butuh VPS sama sekali?**
-Tidak. Seluruh alur (login OAuth, refresh, kuota, rotasi, GUI, endpoint) jalan lokal, semuanya jadi satu di port 8390.
+Tidak. Seluruh alur (login OAuth, refresh, kuota, gateway, GUI, endpoint) jalan lokal, semuanya jadi satu di port 8390.
 
 **Kenapa proxy nggak perlu dijalankan terpisah?**
 Sekarang `gravpool.cli gui` menjalankan reverse-proxy secara internal ke *child process* `cli-proxy-api`. Artinya, kamu nggak perlu buka dua terminal lagi; semuanya cukup 1 command.

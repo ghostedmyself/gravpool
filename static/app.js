@@ -246,6 +246,7 @@ const loadModels = async () => {
 
 /* ─── External Providers ─── */
 const loadProviders = async () => {
+  UI.providersContainer.innerHTML = `<div class="skeleton-card"></div><div class="skeleton-card"></div>`;
   try {
     const providers = await apiCall('/api/providers');
     if (providers.length === 0) {

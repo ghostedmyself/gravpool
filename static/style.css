@@ -37,6 +37,10 @@
 }
 
 /* Reset & Base */
+:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -67,14 +71,14 @@ a:hover {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-base);
+  background: transparent;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--border-main);
   border-radius: var(--radius-full);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--border-hover);
+  background: var(--accent-primary);
 }
 
 /* Typography */
@@ -177,7 +181,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 .btn:hover:not(:disabled) {
   background-color: var(--bg-hover);
-  border-color: var(--border-hover);
+  border-color: var(--accent-primary);
 }
 .btn:disabled {
   opacity: 0.5;
@@ -288,7 +292,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 .card:hover {
   background-color: var(--bg-card-hover);
-  border-color: var(--border-hover);
+  border-color: var(--accent-primary);
 }
 .card-row {
   display: flex;
@@ -507,7 +511,7 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: var(--radius-lg);
   width: 100%;
   max-width: 500px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 20px 40px rgba(10, 9, 8, 0.6);
   overflow: hidden;
 }
 .dialog-header {
@@ -550,7 +554,7 @@ h1, h2, h3, h4, h5, h6 {
   padding: 1rem 1.25rem;
   color: var(--text-main);
   font-size: 0.875rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 25px rgba(10, 9, 8, 0.5);
   min-width: 300px;
 }
 .toast.error {
@@ -583,15 +587,16 @@ h1, h2, h3, h4, h5, h6 {
 .empty-state {
   text-align: center;
   padding: 3rem 1.5rem;
-  color: var(--text-muted);
+  color: var(--accent-secondary);
   background-color: var(--bg-surface);
-  border: 1px dashed var(--border-main);
+  border: 1px dashed var(--accent-secondary);
   border-radius: var(--radius-md);
 }
 .inline-err {
   color: var(--status-err);
   font-size: 0.875rem;
   margin-top: 0.5rem;
+  text-shadow: 0 0 8px rgba(232, 69, 60, 0.2);
 }
 
 /* Form Elements */
@@ -607,8 +612,11 @@ input, select {
   transition: border-color var(--transition-fast);
 }
 input:focus, select:focus {
-  outline: none;
+  outline: 2px solid var(--accent); outline-offset: 2px;
   border-color: var(--accent-primary);
+}
+input:hover, select:hover {
+  border-color: var(--border-hover);
 }
 input::placeholder {
   color: var(--text-dim);

@@ -7,7 +7,7 @@
 
 <h1 align="center">GravPool</h1>
 <p align="center"><b>Kelola akun Google Antigravity Pro sebagai pool kredensial OAuth</b><br>
-refresh otomatis · monitoring kuota live · rotasi akun · web dashboard</p>
+refresh otomatis · monitoring kuota live · gateway OpenAI-compatible · web dashboard</p>
 
 ---
 
@@ -64,7 +64,7 @@ flowchart LR
 ```
 
 **Ringkasnya:** akun Google → token OAuth → disimpan sebagai JSON →
-pool ini yang ngurusin refresh + kuota + rotasi → dipakai lewat endpoint
+pool ini yang ngurusin refresh + kuota + gateway → dipakai lewat endpoint
 OpenAI-compatible di OpenCode atau tool apa pun.
 
 ---
@@ -104,14 +104,13 @@ Setelah itu:
 |---|---|---|
 | 🔑 **OAuth** | refresh token otomatis, login akun baru (1-command browser), userinfo | `oauth.py`, `login_flow.py` |
 | 📊 **Kuota** | `fetchAvailableModels` live, snapshot JSON, cache | `quota.py` |
-| 🔄 **Rotasi** | round-robin thread-safe, auto-skip akun mati, auto-refresh | `rotate.py` |
 | 🧩 **Combo** | model virtual `fallback`/`fusion`, auto-skip kuota habis | `combo.py` |
 | 💾 **Storage** | model auth file CLIProxyAPI-compatible, scan + expiry | `store.py` |
 | 🖥️ **GUI** | dashboard web zero-dep, proxy terintegrasi — dashboard + `/v1` satu port | `web.py` |
 | 🔗 **Providers** | External Providers: tambah API Endpoint eksternal (OpenAI, dll) ke pool gateway. | `providers.py` |
 | 🛡️ **Verifikasi** | Auth verify (test token post-OAuth terhadap API kuota). | `login_flow.py` |
 | 🎨 **UI** | Desain Obsidian/Black-Gold baru, countdown expiry, quota grouping (2-3 bars), provider auto-detect. | `web.py` / `static/` |
-| ⌨️ **CLI** | `status` / `quota` / `refresh` / `gui` / `add-account` / `combo` / `login-binary` | `cli.py` |
+| ⌨️ **CLI** | `status` / `quota` / `refresh` / `gui` / `add-account` / `combo` | `cli.py` |
 
 ---
 
@@ -126,7 +125,6 @@ gravpool/
 │   ├── login_flow.py            #   login 1-command (browser callback)
 │   ├── combo.py                 #   virtual model combo (fallback/fusion)
 │   ├── quota.py                 #   fetchAvailableModels + snapshot
-│   ├── rotate.py                #   round-robin rotator
 │   ├── providers.py             #   external provider registry
 │   ├── proxy.py                 #   spawn + supervise CLIProxyAPI (embedded /v1)
 │   ├── web.py                   #   dashboard web zero-dep + reverse-proxy /v1
@@ -199,7 +197,7 @@ Satu file per akun, **CLIProxyAPI-compatible** (drop-in):
 ```jsonc
 {
   "access_token":  "ya29.…",              // token akses (diputar oleh oauth.py)
-  "disabled":      false,                 // skip dari rotasi
+  "disabled":      false,                 // skip dari rotasi akun
   "email":         "user@gmail.com",      // identitas akun
   "expired":       "2026-10-01T13:01:06Z",// ISO8601 UTC, di-parse store.py
   "expires_in":    3599,                  // detik
@@ -222,7 +220,7 @@ Cara pakainya:
    - **Base URL:** `http://127.0.0.1:8390/v1`
    - **API Key:** `sk-local`
 
-> **Note:** GravPool mengatur manajemen akun, rotasi, dan kuota, serta otomatis menjalankan proxy di background tanpa perlu terminal terpisah.
+> **Note:** GravPool mengatur manajemen akun, refresh, dan kuota, serta otomatis menjalankan proxy di background tanpa perlu terminal terpisah.
 
 ---
 
@@ -261,13 +259,12 @@ access:
 
 ```python
 from gravpool.store import load_accounts
-from gravpool.rotate import Rotator
 from gravpool.quota import pool_quota
 
 accounts = load_accounts(["/root/.cli-proxy-api"])
-rot = Rotator(accounts)        # auto-refresh + skip akun mati
-acct = rot.next()              # round-robin, thread-safe
-print(pool_quota([acct]))
+for acct in accounts:
+    q = pool_quota([acct])
+    print(q)
 ```
 
 ---

@@ -5,6 +5,15 @@ Semua perubahan penting pada proyek ini dicatat di sini.
 Format berdasarkan [Keep a Changelog](https://keepachangelog.com/id/1.0.0/),
 dan proyek ini mengikuti [Semantic Versioning](https://semver.org/lang/id/).
 
+## [0.4.3] - 2026-10-02
+
+### Dihapus
+- `rotate.py` — kode mati (round-robin rotator) yang tidak pernah dipakai internal; semua referensi dihapus dari README.
+- Subcommand CLI `login-binary` dari docstring usage.
+
+### Diubah
+- `cli.py` — docstring usage dirapikan agar akurat dengan subcommand yang ada.
+
 ## [0.4.2] - 2026-10-02
 
 ### Ditambahkan

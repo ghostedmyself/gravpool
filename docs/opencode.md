@@ -34,4 +34,4 @@ Semua model yang dilaporkan oleh proxy `/v1/models` (baik dari Antigravity maupu
 
 ## Kenapa ini berjalan lancar?
 
-OpenCode menggunakan `@ai-sdk/openai-compatible` yang hanya butuh `baseURL` dan `apiKey`. `cli-proxy-api` melayani permintaan chat completions di rute `/v1`. Di belakang layar, **GravPool** otomatis menangani rotasi akun, kuota, dan auto-refresh. Semuanya sudah terintegrasi dan siap pakai berkat alur satu-bundle.
+OpenCode menggunakan `@ai-sdk/openai-compatible` yang hanya butuh `baseURL` dan `apiKey`. `cli-proxy-api` melayani permintaan chat completions di rute `/v1`. Di belakang layar, **GravPool** otomatis menangani refresh akun, kuota, dan gateway. Semuanya sudah terintegrasi dan siap pakai berkat alur satu-bundle.
