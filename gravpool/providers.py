@@ -188,6 +188,24 @@ def _normalize_base(url: str) -> str:
     return u + "/v1"
 
 
+# Some Cloudflare-fronted relays (e.g. Workers) reject requests with the
+# default Python-urllib User-Agent. Send a browser-like UA so /models fetch
+# isn't blocked with 403 (same pattern as the gonkarouter auth flow).
+_BROWSER_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+               "AppleWebKit/537.36 (KHTML, like Gecko) "
+               "Chrome/124.0.0.0 Safari/537.36")
+
+
+def _models_request(url: str, api_key: str) -> urllib.request.Request:
+    from urllib import request as _req
+    return _req.Request(url, headers={
+        "Authorization": f"Bearer {api_key}",
+        "Accept": "application/json",
+        "Accept-Encoding": "gzip",
+        "User-Agent": _BROWSER_UA,
+    })
+
+
 def fetch_provider_models(provider: Provider, *, timeout: int = 10) -> list[str]:
     """GET <base>/models with the provider's API key. Tries the normalized
     base URL, then falls back to the raw base URL in case the provider
@@ -199,11 +217,7 @@ def fetch_provider_models(provider: Provider, *, timeout: int = 10) -> list[str]
             continue
         tried.append(candidate)
         url = candidate + "/models"
-        req = urlreq.Request(url, headers={
-            "Authorization": f"Bearer {provider.api_key}",
-            "Accept": "application/json",
-            "Accept-Encoding": "gzip",
-        })
+        req = _models_request(url, provider.api_key)
         try:
             with urlreq.urlopen(req, timeout=timeout) as resp:
                 raw = resp.read()
@@ -225,9 +239,7 @@ def fetch_provider_models(provider: Provider, *, timeout: int = 10) -> list[str]
             continue
     # All candidates failed; surface the last error for the last candidate.
     url = tried[-1] + "/models" if tried else provider.base_url + "/models"
-    req = urlreq.Request(url, headers={
-        "Authorization": f"Bearer {provider.api_key}", "Accept": "application/json",
-    })
+    req = _models_request(url, provider.api_key)
     try:
         with urlreq.urlopen(req, timeout=timeout) as resp:
             data = json.loads(resp.read())
