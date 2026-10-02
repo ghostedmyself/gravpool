@@ -667,27 +667,37 @@ h1, h2, h3, h4, h5, h6 {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(10, 9, 8, 0.8);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background-color: rgba(14, 12, 9, 0.62);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
   padding: 1.5rem;
+  border: 0;
+  max-width: none;
+  max-height: none;
 }
 .dialog-content {
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border-main);
+  background-color: rgba(23, 19, 16, 0.82);
+  -webkit-backdrop-filter: blur(26px) saturate(170%);
+  backdrop-filter: blur(26px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: var(--radius-lg);
   width: 100%;
   max-width: 500px;
-  box-shadow: 0 20px 40px rgba(10, 9, 8, 0.6);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.08),
+    0 24px 60px -16px rgba(0, 0, 0, 0.6);
   overflow: hidden;
 }
 .dialog-header {
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid var(--border-main);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.10);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -700,11 +710,11 @@ h1, h2, h3, h4, h5, h6 {
 }
 .dialog-actions {
   padding: 1rem 1.5rem;
-  border-top: 1px solid var(--border-main);
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
-  background-color: var(--bg-base);
+  background-color: rgba(255, 255, 255, 0.03);
 }
 
 /* Toasts */
