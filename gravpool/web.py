@@ -299,12 +299,19 @@ def _make_handler(auth_dirs: list[str], proxy=None, host: str = "127.0.0.1", por
                     length = int(self.headers.get("Content-Length", 0))
                     body = json.loads(self.rfile.read(length))
                     name = body.get("name", "")
-                    p = ext_providers.get_provider(name)
-                    if not p:
-                        self._json(404, {"error": f"provider '{name}' not found"})
-                        return
+                    base_url = body.get("base_url", "")
+                    api_key = body.get("api_key", "")
+                    # Test-before-save: if base_url+api_key provided directly,
+                    # test against those; otherwise look up saved provider by name.
+                    if base_url and api_key:
+                        p = ext_providers.Provider(name=name or "_test", base_url=base_url, api_key=api_key)
+                    else:
+                        p = ext_providers.get_provider(name)
+                        if not p:
+                            self._json(404, {"error": f"provider '{name}' not found"})
+                            return
                     models = ext_providers.fetch_provider_models(p)
-                    self._json(200, {"ok": True, "provider": name, "models": models})
+                    self._json(200, {"ok": True, "provider": p.name, "models": models})
                 except Exception as e:
                     self._json(502, {"error": str(e)})
             elif path == "/api/providers/update":
