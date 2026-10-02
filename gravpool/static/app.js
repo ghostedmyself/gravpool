@@ -136,37 +136,32 @@ const renderAccounts = (statusData, quotaData) => {
     const qData = quotaData.accounts?.[acc.email];
     let quotaHtml = '';
 
+    // — estilo fleet-control (mirip panel antigravity): satu bar per akun —
     if (qData && qData.error) {
       quotaHtml = `<div class="inline-err">Quota error: ${escapeHTML(qData.error)}</div>`;
     } else if (qData && qData.models) {
       const models = Object.values(qData.models);
-      const grouped = {};
-      for (const m of models) {
-        const pct = (m.remaining * 100).toFixed(1);
-        if (!grouped[pct]) grouped[pct] = { count: 0, reset: m.reset };
-        grouped[pct].count++;
-      }
-
-      const groups = Object.entries(grouped)
-        .map(([pctStr, data]) => ({ pct: parseFloat(pctStr), ...data }))
-        .sort((a, b) => a.pct - b.pct);
-
-      quotaHtml = groups.map(g => {
-        const colorClass = g.pct < 20 ? 'low' : g.pct < 50 ? 'mid' : 'high';
-        const resetStr = g.reset ? `<span class="quota-reset">${escapeHTML(fmtReset(g.reset))}</span>` : '';
-        const modelStr = g.count === 1 ? '1 model' : `${g.count} models`;
-        return `
-          <div class="quota-item">
-            <div class="quota-label">
-              <span>${modelStr}</span>
-              <span>${g.pct.toFixed(1)}% ${resetStr}</span>
-            </div>
-            <div class="quota-track">
-              <div class="quota-fill ${colorClass}" style="width: ${g.pct}%"></div>
-            </div>
+      const pcts = models.map(m => (m.remaining * 100));
+      const avg = pcts.reduce((a, b) => a + b, 0) / (pcts.length || 1);
+      const worst = Math.min(...pcts);
+      const colorClass = worst < 20 ? 'low' : worst < 50 ? 'mid' : 'high';
+      const resets = models.map(m => m.reset).filter(Boolean);
+      const resetStr = resets.length
+        ? ` · <span class="acc-sub">${escapeHTML(fmtReset(new Date(Math.min(...resets.map(r => new Date(r)))), 'reset'))}</span>`
+        : '';
+      const modelStr = models.length === 1 ? '1 model' : `${models.length} models`;
+      quotaHtml = `
+        <div class="acc-quota">
+          <div class="acc-bar-row">
+            <span class="acc-bar">
+              <span class="quota-fill ${colorClass}" style="width: ${avg}%"></span>
+            </span>
+            <span class="acc-pct">${avg.toFixed(1)}%</span>
           </div>
-        `;
-      }).join('');
+          <div class="acc-meta">
+            <span class="acc-sub">${modelStr}${resetStr}</span>
+          </div>
+        </div>`;
     } else {
       quotaHtml = `<div class="quota-label"><span>No quota data</span></div>`;
     }
@@ -175,15 +170,18 @@ const renderAccounts = (statusData, quotaData) => {
     const isDisabling = acc.state !== 'disabled';
     const expiryInfo = fmtExpiry(acc.expired);
     const expiryHtml = expiryInfo
-      ? `<div class="token-expiry"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> token ${escapeHTML(expiryInfo)}</div>`
+      ? `<span class="acc-sub">· token ${escapeHTML(expiryInfo)}</span>`
       : '';
 
     return `
       <div class="card">
         <div class="card-row">
-          <div class="card-email">${escapeHTML(acc.email)}</div>
-          <div class="card-actions">
+          <div class="acc-id">
+            <span class="acc-dot" style="background:${qData && qData.models ? (Math.min(...Object.values(qData.models).map(m => m.remaining * 100)) > 50 ? '#10b981' : Math.min(...Object.values(qData.models).map(m => m.remaining * 100)) > 20 ? '#f59e0b' : '#ef4444') : '#71717a'}"></span>
+            <span class="card-email">${escapeHTML(acc.email)}</span>
             <span class="badge ${acc.state}">${acc.state}</span>
+          </div>
+          <div class="card-actions">
             <button class="btn-icon toggle-acc-btn" data-email="${escapeHTML(acc.email)}" data-disable="${isDisabling}" title="${toggleAction}" aria-label="${toggleAction} account">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 ${isDisabling ? '<path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line>' : '<polygon points="5 3 19 12 5 21 5 3"></polygon>'}
@@ -191,7 +189,7 @@ const renderAccounts = (statusData, quotaData) => {
             </button>
           </div>
         </div>
-        ${expiryHtml}
+        <div class="acc-meta">${expiryHtml}</div>
         ${quotaHtml}
       </div>
     `;
