@@ -9,93 +9,114 @@
 <body>
   <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
-  <header class="header">
-    <div class="header-left">
-      <h1 class="logo">GravPool</h1>
-      <div id="proxy-status" class="proxy-pill skeleton">
-        <span class="status-dot"></span> <span class="status-text">Checking Proxy...</span>
-      </div>
+  <header class="topbar">
+    <div class="topbar-brand">
+      <svg class="brand-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0H5a2 2 0 0 1-2-2v-4m6 6h6m6 0h4a2 2 0 0 0 2-2v-4m-6 6V3"></path>
+      </svg>
+      <span class="brand-name">GravPool</span>
     </div>
-    <div class="header-right">
+    <div class="topbar-right">
+      <div id="proxy-status" class="proxy-pill skeleton">
+        <span class="status-dot"></span>
+        <span class="status-text">Checking</span>
+      </div>
       <div class="endpoint-group" id="endpoint-group">
         <code id="proxy-endpoint" class="endpoint-url skeleton-text"></code>
         <button id="copy-key-btn" class="btn btn-icon" aria-label="Copy API Key" disabled>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
         </button>
       </div>
     </div>
   </header>
 
-  <main class="main-content">
-    <section class="overview-strip">
-      <div class="stats">
-        <div class="stat-box">
-          <span class="stat-label">Total Accounts</span>
-          <span class="stat-value" id="stat-total">-</span>
-        </div>
-        <div class="stat-box">
-          <span class="stat-label">OK</span>
-          <span class="stat-value text-green" id="stat-ok">-</span>
-        </div>
-        <div class="stat-box">
-          <span class="stat-label">Expired</span>
-          <span class="stat-value text-amber" id="stat-expired">-</span>
-        </div>
-        <div class="stat-box">
-          <span class="stat-label">Disabled</span>
-          <span class="stat-value text-gray" id="stat-disabled">-</span>
-        </div>
+  <main class="container">
+
+    <!-- Stats Strip -->
+    <section class="stats-strip">
+      <div class="stat">
+        <span class="stat-num" id="stat-total">—</span>
+        <span class="stat-lbl">Accounts</span>
       </div>
-      <div class="actions">
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-num text-ok" id="stat-ok">—</span>
+        <span class="stat-lbl">OK</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-num text-warn" id="stat-expired">—</span>
+        <span class="stat-lbl">Expired</span>
+      </div>
+      <div class="stat-divider"></div>
+      <div class="stat">
+        <span class="stat-num text-dim" id="stat-disabled">—</span>
+        <span class="stat-lbl">Disabled</span>
+      </div>
+      <div class="stats-actions">
         <button id="refresh-all-btn" class="btn">Refresh All</button>
-        <button id="reload-quota-btn" class="btn">Reload Quota</button>
         <button id="add-account-btn" class="btn btn-primary">Add Account</button>
       </div>
     </section>
 
-    <div class="grid-layout">
-      <!-- Accounts Column -->
-      <section class="panel accounts-panel">
-        <header class="panel-header">
+    <!-- Two-column layout -->
+    <div class="grid-main">
+      <!-- Accounts -->
+      <section class="col-accounts">
+        <div class="col-header">
           <h2>Accounts</h2>
-        </header>
-        <div id="accounts-container" class="card-list">
-          <div class="skeleton-text" style="height: 100px; width: 100%; border-radius: 4px;"></div>
+          <button id="reload-quota-btn" class="btn btn-ghost">Reload</button>
+        </div>
+        <div id="accounts-container" class="acc-list">
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
         </div>
       </section>
 
-      <!-- Combos Column -->
-      <section class="panel combos-panel">
-        <header class="panel-header">
+      <!-- Combos -->
+      <section class="col-combos">
+        <div class="col-header">
           <h2>Combos</h2>
-        </header>
-        <div class="combo-create">
-          <form id="combo-form" class="combo-form">
-            <input type="text" id="combo-name" placeholder="Combo Name" required>
-            <select id="combo-kind" required aria-label="Combo Kind">
-              <option value="fallback">Fallback</option>
-              <option value="fusion">Fusion</option>
-            </select>
-            <input type="text" id="combo-models" placeholder="Models (comma-separated)" required>
-            <button type="submit" class="btn">Create</button>
-          </form>
         </div>
-        <div id="combos-container" class="card-list">
-          <div class="skeleton-text" style="height: 80px; width: 100%; border-radius: 4px;"></div>
+        <form id="combo-form" class="combo-form">
+          <input type="text" id="combo-name" placeholder="name" required>
+          <select id="combo-kind" required aria-label="Combo Kind">
+            <option value="fallback">Fallback</option>
+            <option value="fusion">Fusion</option>
+          </select>
+          <input type="text" id="combo-models" placeholder="model-a, model-b" required>
+          <button type="submit" class="btn btn-primary">Create</button>
+        </form>
+        <div id="combos-container" class="combo-list">
+          <div class="skeleton-card"></div>
         </div>
       </section>
     </div>
+
+    <!-- Models -->
+    <section class="models-section">
+      <div class="col-header">
+        <h2>Available Models</h2>
+        <span class="models-count" id="models-count">—</span>
+      </div>
+      <div id="models-grid" class="models-grid">
+        <div class="skeleton-card"></div>
+      </div>
+    </section>
+
   </main>
 
-  <!-- Add Account Panel -->
+  <!-- Add Account Dialog -->
   <dialog id="add-account-dialog" class="dialog">
     <div class="dialog-content">
-      <h2>Add Account</h2>
-      <div id="add-account-state" class="add-account-state">
-        <button id="start-add-account" class="btn btn-primary w-full">Generate Auth Link</button>
+      <div class="dialog-header">
+        <h2>Add Account</h2>
+        <button id="close-add-account" class="btn btn-icon" aria-label="Close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
       </div>
-      <div class="dialog-actions">
-        <button id="close-add-account" class="btn">Close</button>
+      <div id="add-account-state" class="dialog-body">
+        <button id="start-add-account" class="btn btn-primary btn-block">Generate Auth Link</button>
       </div>
     </div>
   </dialog>
