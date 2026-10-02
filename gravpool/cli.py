@@ -32,7 +32,10 @@ DEFAULT_AUTH_DIRS = [
 
 
 def dirs_from(args) -> list[str]:
-    return args.auth_dirs or DEFAULT_AUTH_DIRS
+    if args.auth_dirs:
+        return args.auth_dirs
+    existing = [d for d in DEFAULT_AUTH_DIRS if os.path.isdir(d)]
+    return existing or ["auth"]
 
 
 def cmd_status(args) -> int:
@@ -147,7 +150,7 @@ def cmd_combo(args) -> int:
 
 def cmd_login_binary(args) -> int:
     """Run the pool binary's built-in `--antigravity-login` flow."""
-    binary = args.binary or "/opt/cli-proxy-api"
+    binary = args.binary or proxy_binary()
     cmd = [binary]
     if args.config:
         cmd += ["--config", args.config]
@@ -156,12 +159,25 @@ def cmd_login_binary(args) -> int:
     os.execvp(cmd[0], cmd)
 
 
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def proxy_binary() -> str:
+    """Path to the bundled cli-proxy-api binary (repo-local, not a hardcoded path)."""
+    bin_dir = os.path.join(REPO_ROOT, "bin")
+    names = ["cli-proxy-api.exe", "cli-proxy-api"] if os.name == "nt" else ["cli-proxy-api"]
+    for n in names:
+        p = os.path.join(bin_dir, n)
+        if os.path.isfile(p):
+            return p
+    return os.path.join(bin_dir, names[0])
+
+
 def cmd_gui(args) -> int:
     """Serve the web dashboard."""
     proxy = None
     if not args.no_proxy:
-        binary_path = "/root/repos/gravpool/bin/cli-proxy-api" if os.name != "nt" else "/root/repos/gravpool/bin/cli-proxy-api.exe"
-        proxy = ProxySupervisor(binary_path, dirs_from(args),
+        proxy = ProxySupervisor(proxy_binary(), dirs_from(args),
                                 port=args.proxy_port if args.proxy_port else None)
 
     try:
@@ -203,7 +219,7 @@ def main(argv=None) -> int:
     sp.set_defaults(fn=cmd_gui)
 
     sp = sub.add_parser("login-binary", help="run cli-proxy-api --antigravity-login")
-    sp.add_argument("--binary", default="/opt/cli-proxy-api")
+    sp.add_argument("--binary", default=None)
     sp.add_argument("--config", default=None)
     sp.set_defaults(fn=cmd_login_binary)
 
