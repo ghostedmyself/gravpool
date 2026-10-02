@@ -124,22 +124,30 @@ const renderAccounts = (statusData, quotaData) => {
     if (qData && qData.error) {
       quotaHtml = `<div class="inline-err">Quota error: ${escapeHTML(qData.error)}</div>`;
     } else if (qData && qData.models) {
-      const models = Object.entries(qData.models)
-        .map(([model, data]) => ({ model, ...data }))
-        .sort((a, b) => a.remaining - b.remaining);
+      const models = Object.values(qData.models);
+      const grouped = {};
+      for (const m of models) {
+        const pct = (m.remaining * 100).toFixed(1);
+        if (!grouped[pct]) grouped[pct] = { count: 0, reset: m.reset };
+        grouped[pct].count++;
+      }
 
-      quotaHtml = models.map(m => {
-        const pct = m.remaining * 100;
-        const colorClass = pct < 20 ? 'low' : pct < 50 ? 'mid' : 'high';
-        const resetStr = m.reset ? `<span class="quota-reset">reset ${escapeHTML(m.reset)}</span>` : '';
+      const groups = Object.entries(grouped)
+        .map(([pctStr, data]) => ({ pct: parseFloat(pctStr), ...data }))
+        .sort((a, b) => a.pct - b.pct);
+
+      quotaHtml = groups.map(g => {
+        const colorClass = g.pct < 20 ? 'low' : g.pct < 50 ? 'mid' : 'high';
+        const resetStr = g.reset ? `<span class="quota-reset">reset ${escapeHTML(g.reset)}</span>` : '';
+        const modelStr = g.count === 1 ? '1 model' : `${g.count} models`;
         return `
           <div class="quota-item">
             <div class="quota-label">
-              <span>${escapeHTML(m.model)}</span>
-              <span>${pct.toFixed(1)}% ${resetStr}</span>
+              <span>${modelStr}</span>
+              <span>${g.pct.toFixed(1)}% ${resetStr}</span>
             </div>
             <div class="quota-track">
-              <div class="quota-fill ${colorClass}" style="width: ${pct}%"></div>
+              <div class="quota-fill ${colorClass}" style="width: ${g.pct}%"></div>
             </div>
           </div>
         `;

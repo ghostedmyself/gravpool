@@ -7,7 +7,7 @@ Melalui setup satu-bundle, endpoint **OpenAI-compatible** sudah disiapkan untukm
 1. Pastikan OpenCode terinstall: `npm i -g opencode-ai@latest`
 2. Pastikan dashboard GravPool sudah berjalan di terminalmu:
    ```bash
-   python -m gravpool.cli gui --auth-dirs auth
+   python -m gravpool.cli gui --auth-dirs auth --port 8390
    ```
 3. Atur kredensial. Contohnya lewat environment variable agar aman:
    ```bash
@@ -27,7 +27,7 @@ opencode --model antigravity/gemini-pro-agent
 
 ## Model yang Tersedia
 
-Semua model yang dilaporkan oleh proxy `/v1/models`. Contohnya:
+Semua model yang dilaporkan oleh proxy `/v1/models` (baik dari Antigravity maupun External Providers). Contohnya:
 - `claude-sonnet-4-6`, `claude-opus-4-6-thinking`
 - `gemini-pro-agent`, `gemini-3.1-pro-low`, `gemini-3.7-flash-high`, dll.
 - `gpt-oss-120b-medium`

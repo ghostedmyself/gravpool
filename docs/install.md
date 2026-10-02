@@ -37,11 +37,12 @@ python -m gravpool.cli add-account --auth-dir auth
 **2. Jalankan GravPool (Satu Perintah, Satu Port)**
 Sekarang jalankan GUI:
 ```bash
-python -m gravpool.cli gui --auth-dirs auth
+python -m gravpool.cli gui --auth-dirs auth --port 8390
 ```
 
 Ini akan memulai:
-- **Dashboard GravPool:** Buka di browser http://127.0.0.1:8390 (untuk kelola akun, kuota, combo).
+- **Dashboard GravPool:** Buka di browser http://127.0.0.1:8390
+- **External Providers:** Bisa menambah API eksternal via Dashboard. (untuk kelola akun, kuota, combo).
 - **Endpoint OpenAI-Compatible (Proxy):** Proxy API otomatis ter-embed dan dijalankan di background, bisa diakses dari AI client kamu di base URL `http://127.0.0.1:8390/v1` dengan API key `sk-local`.
 
 ---

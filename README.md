@@ -36,6 +36,17 @@ Tanpa dependency apa pun (pure Python stdlib). Teruji live terhadap akun Pro
 
 ---
 
+## 🌟 Fitur Baru (0.4.1 & 0.4.2)
+
+- **External Providers**: Tambahkan API key OpenAI/Anthropic/custom dan provider luar ke unified gateway `sk-local`. Semua request dirouting otomatis ke eksternal jika model cocok.
+- **Provider Auto-Detect**: Cukup masukkan Base URL dan API Key, klik "Test Connection", GravPool akan memanggil `/models` dari provider secara otomatis.
+- **Auth Verify**: Setelah callback OAuth selesai, token langsung dites ke endpoint quota. Status "verified, N models" membuktikan akun valid.
+- **Token Countdown**: Di dashboard, setiap card akun kini menampilkan waktu relatif countdown token expiry (contoh: *refresh in 35m*).
+- **Quota Grouping**: List kuota tidak lagi penuh dengan 27 model. Model dikelompokkan dalam kategori/tier kuota utama sehingga cukup menampilkan 2-3 bar progress saja.
+- **Obsidian UI**: Redesign dashboard dengan tema Black-Gold / Obsidian, terlihat jauh lebih profesional, solid, dan mudah dibaca.
+
+---
+
 ## 🔁 Alur kerja
 
 ```mermaid
@@ -97,6 +108,9 @@ Setelah itu:
 | 🧩 **Combo** | model virtual `fallback`/`fusion`, auto-skip kuota habis | `combo.py` |
 | 💾 **Storage** | model auth file CLIProxyAPI-compatible, scan + expiry | `store.py` |
 | 🖥️ **GUI** | dashboard web zero-dep, proxy terintegrasi — dashboard + `/v1` satu port | `web.py` |
+| 🔗 **Providers** | External Providers: tambah API Endpoint eksternal (OpenAI, dll) ke pool gateway. | `providers.py` |
+| 🛡️ **Verifikasi** | Auth verify (test token post-OAuth terhadap API kuota). | `login_flow.py` |
+| 🎨 **UI** | Desain Obsidian/Black-Gold baru, countdown expiry, quota grouping (2-3 bars), provider auto-detect. | `web.py` / `static/` |
 | ⌨️ **CLI** | `status` / `quota` / `refresh` / `gui` / `add-account` / `combo` / `login-binary` | `cli.py` |
 
 ---
@@ -113,6 +127,7 @@ gravpool/
 │   ├── combo.py                 #   virtual model combo (fallback/fusion)
 │   ├── quota.py                 #   fetchAvailableModels + snapshot
 │   ├── rotate.py                #   round-robin rotator
+│   ├── providers.py             #   external provider registry
 │   ├── proxy.py                 #   spawn + supervise CLIProxyAPI (embedded /v1)
 │   ├── web.py                   #   dashboard web zero-dep + reverse-proxy /v1
 │   ├── cli.py                   #   antarmuka command-line
@@ -140,7 +155,7 @@ gravpool/
 | `status` | tampilkan state token tiap akun (ok / expired / disabled) |
 | `quota` | ringkasan kuota per akun; `--out file.json` untuk snapshot penuh |
 | `refresh` | refresh semua token yang expired |
-| `gui` | jalankan dashboard web dan embedded proxy (`--host` / `--port`). Gunakan `--no-proxy` untuk mematikan proxy. |
+| `gui` | jalankan dashboard web dan embedded proxy (`--host` / `--port`). Default port 8390. Gunakan `--no-proxy` untuk mematikan proxy. |
 | `add-account` | login akun baru 1-command: browser consent → callback → simpan auth file |
 | `combo` | kelola virtual model combo: `list` / `add` / `rm` / `resolve` |
 | `login-binary` | tambah akun baru lewat flow login bawaan `cli-proxy-api` |
@@ -234,7 +249,7 @@ sama seperti yang di-generate `bundle.py` (`config.yaml`):
 # config.yaml (schema v8 — nested)
 server:
   host: 127.0.0.1
-  port: 8317
+  port: 8390
 oauth:
   auth-dir: ./auth
 access:

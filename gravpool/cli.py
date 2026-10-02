@@ -2,12 +2,13 @@
 """gravpool CLI.
 
 Usage:
-  python -m gravpool.cli status  [--auth-dirs DIR ...]        # pool overview
-  python -m gravpool.cli quota   [--auth-dirs DIR ...] [--out FILE]
-  python -m gravpool.cli refresh [--auth-dirs DIR ...]        # refresh all
-  python -m gravpool.cli gui     [--host H] [--port P]     # web dashboard
+  python -m gravpool.cli status        [--auth-dirs DIR ...]     # pool overview
+  python -m gravpool.cli quota         [--auth-dirs DIR ...] [--out FILE]
+  python -m gravpool.cli refresh      [--auth-dirs DIR ...]     # refresh all tokens
+  python -m gravpool.cli gui          [--host H] [--port P] [--no-proxy]  # web dashboard
+  python -m gravpool.cli add-account  [--no-browser]            # OAuth login for new account
+  python -m gravpool.cli combo        list|add|rm|resolve ...   # manage model combos
   python -m gravpool.cli login-binary [--binary PATH] [--config PATH]
-                                                        # run --antigravity-login
 """
 from __future__ import annotations
 

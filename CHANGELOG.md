@@ -5,6 +5,20 @@ Semua perubahan penting pada proyek ini dicatat di sini.
 Format berdasarkan [Keep a Changelog](https://keepachangelog.com/id/1.0.0/),
 dan proyek ini mengikuti [Semantic Versioning](https://semver.org/lang/id/).
 
+## [0.4.2] - 2026-10-02
+
+### Ditambahkan
+- Desain UI Obsidian/Black-Gold yang baru untuk Dashboard.
+- Provider Auto-Detect: Tombol Test Connection untuk otomatis fetch `/models` dari provider eksternal.
+- Quota Grouping: Pengelompokan kuota model berdasarkan tier (2-3 bar) menggantikan bar terpisah yang panjang.
+
+## [0.4.1] - 2026-10-02
+
+### Ditambahkan
+- External Providers: Mendukung penambahan API endpoint eksternal ke dalam pool gateway `sk-local`. Request dirouting otomatis berdasarkan nama model.
+- Auth Verify: Pengetesan token otomatis ke API quota pasca callback OAuth (status 'verified, N models').
+- Token Refresh Countdown: Dashboard kini menampilkan indikator sisa waktu expiry tiap akun (e.g., 'refresh in 35m').
+
 ## [0.4.0] - 2026-10-01
 
 ### Ditambahkan

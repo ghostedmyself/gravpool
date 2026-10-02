@@ -20,7 +20,8 @@
         "gemini-3.6-flash-high": { "name": "Gemini 3.6 Flash High (Antigravity)" },
         "gemini-3.7-flash-high": { "name": "Gemini 3.7 Flash High (Antigravity)" },
         "gemini-3.8-flash-high": { "name": "Gemini 3.8 Flash High (Antigravity)" },
-        "gpt-oss-120b-medium": { "name": "GPT-OSS 120B (Antigravity)" }
+        "gpt-oss-120b-medium": { "name": "GPT-OSS 120B (Antigravity)" },
+        "gpt-4o": { "name": "GPT-4o (External Provider Example)" }
       }
     }
   }
