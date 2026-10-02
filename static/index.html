@@ -73,7 +73,7 @@
         </div>
       </section>
 
-      <!-- Combos -->
+      <!-- Combos + Providers -->
       <section class="col-combos">
         <div class="col-header">
           <h2>Combos</h2>
@@ -92,6 +92,17 @@
         </div>
       </section>
     </div>
+
+    <!-- External Providers -->
+    <section class="providers-section">
+      <div class="col-header">
+        <h2>External Providers</h2>
+        <button id="add-provider-btn" class="btn btn-primary">Add Provider</button>
+      </div>
+      <div id="providers-container" class="providers-list">
+        <div class="skeleton-card"></div>
+      </div>
+    </section>
 
     <!-- Models -->
     <section class="models-section">
@@ -117,6 +128,43 @@
       </div>
       <div id="add-account-state" class="dialog-body">
         <button id="start-add-account" class="btn btn-primary btn-block">Generate Auth Link</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Add Provider Dialog -->
+  <dialog id="add-provider-dialog" class="dialog">
+    <div class="dialog-content">
+      <div class="dialog-header">
+        <h2>Add External Provider</h2>
+        <button id="close-add-provider" class="btn btn-icon" aria-label="Close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <div class="dialog-body">
+        <form id="provider-form" class="provider-form">
+          <label class="form-label">
+            <span>Name</span>
+            <input type="text" id="provider-name" placeholder="openai" required pattern="[a-zA-Z0-9._-]+">
+          </label>
+          <label class="form-label">
+            <span>Base URL</span>
+            <input type="text" id="provider-base-url" placeholder="https://api.openai.com/v1" required>
+          </label>
+          <label class="form-label">
+            <span>API Key</span>
+            <input type="password" id="provider-api-key" placeholder="sk-..." required autocomplete="off">
+          </label>
+          <label class="form-label">
+            <span>Models (optional, comma-separated)</span>
+            <input type="text" id="provider-models" placeholder="gpt-4o, gpt-4o-mini">
+          </label>
+          <div id="provider-test-result" class="provider-test-result"></div>
+          <div class="dialog-actions">
+            <button type="button" id="test-provider-btn" class="btn">Test Connection</button>
+            <button type="submit" class="btn btn-primary">Add</button>
+          </div>
+        </form>
       </div>
     </div>
   </dialog>

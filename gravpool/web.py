@@ -1,12 +1,13 @@
 
 import os
 import json
+import ssl
 import threading
 import time
 import urllib.parse
 import http.client
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urlparse, urlsplit
 
 from .oauth import OAuthError, refresh_account, build_auth_url, exchange_code, save_new_account
 from .quota import pool_quota
@@ -14,6 +15,7 @@ from .store import AuthAccount, load_accounts
 from .combo import load_combos, add_combo, remove_combo, resolve_combo
 from .constants import CALLBACK_PORT
 from .login_flow import AuthServer, CallbackHandler
+from . import providers as ext_providers
 
 QUOTA_CACHE_TTL = 30  # seconds
 
@@ -75,7 +77,16 @@ def start_add_account(auth_dir: str):
             try:
                 token_resp = exchange_code(server.auth_code, redirect_uri=redirect_uri)
                 account = save_new_account(token_resp, auth_dir)
-                add_acc_state["email"] = account.email
+                # --- verify: test token against quota API ---
+                from .quota import account_quota
+                q = account_quota(account, timeout=15)
+                if q.get("error"):
+                    add_acc_state["error"] = f"Token saved but verification failed: {q['error'][:120]}"
+                elif q.get("models"):
+                    n = len(q["models"])
+                    add_acc_state["email"] = f"{account.email} (verified, {n} models)"
+                else:
+                    add_acc_state["error"] = "Token saved but no models returned"
             except Exception as e:
                 add_acc_state["error"] = f"Exchange failed: {e}"
                 
@@ -211,6 +222,17 @@ def _make_handler(auth_dirs: list[str], proxy=None, host: str = "127.0.0.1", por
                     self._json(200, {"data": [], "error": "proxy not running"})
             elif path == "/api/add-account":
                 self._json(200, add_acc_state)
+            elif path == "/api/providers":
+                try:
+                    plist = ext_providers.load_providers()
+                    self._json(200, [p.to_dict(include_key=False) for p in plist])
+                except Exception as e:
+                    self._json(500, {"error": str(e)})
+            elif path == "/api/providers/models":
+                try:
+                    self._json(200, {"data": ext_providers.all_provider_models()})
+                except Exception as e:
+                    self._json(500, {"error": str(e)})
             else:
                 self._json(404, {"error": "not found"})
 
@@ -261,6 +283,44 @@ def _make_handler(auth_dirs: list[str], proxy=None, host: str = "127.0.0.1", por
                 auth_dir = auth_dirs[0] if auth_dirs else "auth"
                 start_add_account(auth_dir)
                 self._json(200, {"ok": True, "url": add_acc_state["url"]})
+            elif path == "/api/providers":
+                try:
+                    length = int(self.headers.get("Content-Length", 0))
+                    body = json.loads(self.rfile.read(length))
+                    p = ext_providers.add_provider(
+                        body["name"], body["base_url"], body["api_key"],
+                        models=body.get("models") or None,
+                    )
+                    self._json(200, {"ok": True, "provider": p.to_dict(include_key=False)})
+                except Exception as e:
+                    self._json(400, {"error": str(e)})
+            elif path == "/api/providers/test":
+                try:
+                    length = int(self.headers.get("Content-Length", 0))
+                    body = json.loads(self.rfile.read(length))
+                    name = body.get("name", "")
+                    p = ext_providers.get_provider(name)
+                    if not p:
+                        self._json(404, {"error": f"provider '{name}' not found"})
+                        return
+                    models = ext_providers.fetch_provider_models(p)
+                    self._json(200, {"ok": True, "provider": name, "models": models})
+                except Exception as e:
+                    self._json(502, {"error": str(e)})
+            elif path == "/api/providers/update":
+                try:
+                    length = int(self.headers.get("Content-Length", 0))
+                    body = json.loads(self.rfile.read(length))
+                    p = ext_providers.update_provider(
+                        body["name"],
+                        base_url=body.get("base_url"),
+                        api_key=body.get("api_key"),
+                        models=body.get("models"),
+                        enabled=body.get("enabled"),
+                    )
+                    self._json(200, {"ok": True, "provider": p.to_dict(include_key=False)})
+                except Exception as e:
+                    self._json(400, {"error": str(e)})
             else:
                 self._json(404, {"error": "not found"})
 
@@ -270,6 +330,13 @@ def _make_handler(auth_dirs: list[str], proxy=None, host: str = "127.0.0.1", por
                 name = urllib.parse.unquote(path.split("/")[-1])
                 try:
                     removed = remove_combo(name)
+                    self._json(200 if removed else 404, {"ok": removed})
+                except Exception as e:
+                    self._json(500, {"error": str(e)})
+            elif path.startswith("/api/providers/"):
+                name = urllib.parse.unquote(path.split("/")[-1])
+                try:
+                    removed = ext_providers.remove_provider(name)
                     self._json(200 if removed else 404, {"ok": removed})
                 except Exception as e:
                     self._json(500, {"error": str(e)})
@@ -290,12 +357,29 @@ def _make_handler(auth_dirs: list[str], proxy=None, host: str = "127.0.0.1", por
 
             try:
                 self.close_connection = True
-                
+
                 length = self.headers.get("Content-Length")
                 body = None
                 if length:
                     body = self.rfile.read(int(length))
 
+                # --- external provider routing ---
+                # If this is a /v1/chat/completions (or /v1/completions) request,
+                # check if the requested model belongs to an external provider.
+                routed_external = False
+                if body and self.path.startswith("/v1/"):
+                    try:
+                        payload = json.loads(body)
+                        model_id = payload.get("model", "")
+                        if model_id:
+                            provider, orig_model = ext_providers.find_provider_for_model(model_id)
+                            if provider:
+                                self._forward_to_provider(provider, body)
+                                return
+                    except (json.JSONDecodeError, KeyError):
+                        pass
+
+                # --- default: route to CLIProxyAPI (Antigravity) ---
                 headers = {}
                 for k, v in self.headers.items():
                     if k.lower() not in ("host", "connection"):
@@ -322,9 +406,58 @@ def _make_handler(auth_dirs: list[str], proxy=None, host: str = "127.0.0.1", por
                 conn.close()
             except Exception as e:
                 self.log_error(f"Proxy error: {e}")
-                # If we haven't sent any headers yet, send an error response
                 if not getattr(self, '_headers_buffer', None):
                     self._json(502, {"error": str(e)})
+
+        def _forward_to_provider(self, provider, body: bytes) -> None:
+            """Forward a request body to an external OpenAI-compatible endpoint."""
+            try:
+                parsed = urlsplit(provider.base_url)
+                is_https = parsed.scheme == "https"
+                host = parsed.hostname or ""
+                port = parsed.port or (443 if is_https else 80)
+                path_prefix = parsed.path.rstrip("/")
+
+                # Build the target path: provider base + incoming path
+                target_path = path_prefix + self.path
+                # Rewrite Authorization header
+                headers = {}
+                for k, v in self.headers.items():
+                    kl = k.lower()
+                    if kl in ("host", "connection", "authorization", "content-length", "transfer-encoding"):
+                        continue
+                    headers[k] = v
+                headers["Authorization"] = f"Bearer {provider.api_key}"
+                headers["Content-Length"] = str(len(body))
+                headers["Host"] = host
+                headers["Connection"] = "close"
+
+                if is_https:
+                    ctx = ssl.create_default_context()
+                    conn = http.client.HTTPSConnection(host, port, context=ctx, timeout=120)
+                else:
+                    conn = http.client.HTTPConnection(host, port, timeout=120)
+
+                conn.request(self.command, target_path, body, headers)
+                resp = conn.getresponse()
+
+                self.send_response(resp.status)
+                for k, v in resp.getheaders():
+                    if k.lower() not in ("transfer-encoding", "connection"):
+                        self.send_header(k, v)
+                self.send_header("Connection", "close")
+                self.end_headers()
+
+                while True:
+                    chunk = resp.read(8192)
+                    if not chunk:
+                        break
+                    self.wfile.write(chunk)
+                    self.wfile.flush()
+                conn.close()
+            except Exception as e:
+                if not getattr(self, '_headers_buffer', None):
+                    self._json(502, {"error": f"Provider {provider.name} error: {e}"})
 
     return Handler
 

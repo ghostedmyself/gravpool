@@ -17,6 +17,13 @@ const UI = {
   addAccountState: document.getElementById('add-account-state'),
   modelsGrid: document.getElementById('models-grid'),
   modelsCount: document.getElementById('models-count'),
+  providersContainer: document.getElementById('providers-container'),
+  addProviderBtn: document.getElementById('add-provider-btn'),
+  addProviderDialog: document.getElementById('add-provider-dialog'),
+  closeAddProviderBtn: document.getElementById('close-add-provider'),
+  providerForm: document.getElementById('provider-form'),
+  testProviderBtn: document.getElementById('test-provider-btn'),
+  providerTestResult: document.getElementById('provider-test-result'),
   toastContainer: document.getElementById('toast-container')
 };
 
@@ -191,23 +198,34 @@ const renderAccounts = (statusData, quotaData) => {
 /* ─── Models ─── */
 const loadModels = async () => {
   try {
-    const res = await apiCall('/api/models');
-    const models = (res.data || []).filter(m => m && m.id);
-    if (!models.length) {
+    const [proxyRes, extRes] = await Promise.all([
+      apiCall('/api/models').catch(() => ({ data: [] })),
+      apiCall('/api/providers/models').catch(() => ({ data: [] }))
+    ]);
+    const proxyModels = (proxyRes.data || []).filter(m => m && m.id);
+    const extModels = (extRes.data || []).filter(m => m && m.id);
+    const all = [
+      ...proxyModels.map(m => ({ id: m.id, vendor: m.owned_by || 'antigravity', source: 'antigravity' })),
+      ...extModels.map(m => ({ id: m.id, vendor: m.provider || 'external', source: 'external' })),
+    ];
+    if (!all.length) {
       UI.modelsGrid.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;">No models — proxy offline.</div>`;
       UI.modelsCount.textContent = '0';
       return;
     }
-    UI.modelsCount.textContent = `${models.length} models`;
-    UI.modelsGrid.innerHTML = models.map(m => {
-      const id = m.id;
-      let vendor = 'antigravity';
-      if (id.startsWith('gemini')) vendor = 'gemini';
-      else if (id.startsWith('claude')) vendor = 'claude';
-      else if (id.startsWith('gpt')) vendor = 'gpt';
+    UI.modelsCount.textContent = `${all.length} models`;
+    UI.modelsGrid.innerHTML = all.map(m => {
+      let vendor = m.vendor;
+      if (m.source === 'antigravity') {
+        if (m.id.startsWith('gemini')) vendor = 'gemini';
+        else if (m.id.startsWith('claude')) vendor = 'claude';
+        else if (m.id.startsWith('gpt')) vendor = 'gpt';
+      } else {
+        vendor = m.vendor;
+      }
       return `
-        <div class="model-card" title="${escapeHTML(id)}">
-          <div class="model-id">${escapeHTML(id)}</div>
+        <div class="model-card" title="${escapeHTML(m.id)}">
+          <div class="model-id">${escapeHTML(m.id)}</div>
           <div class="model-vendor">${escapeHTML(vendor)}</div>
         </div>
       `;
@@ -217,6 +235,156 @@ const loadModels = async () => {
     UI.modelsCount.textContent = '—';
   }
 };
+
+/* ─── External Providers ─── */
+const loadProviders = async () => {
+  try {
+    const providers = await apiCall('/api/providers');
+    if (providers.length === 0) {
+      UI.providersContainer.innerHTML = `<div class="empty-state">No external providers. Add one to route models like gpt-4o through GravPool.</div>`;
+      return;
+    }
+    UI.providersContainer.innerHTML = providers.map(p => `
+      <div class="provider-card ${p.enabled ? '' : 'disabled'}" data-name="${escapeHTML(p.name)}">
+        <div class="provider-header">
+          <div>
+            <span class="provider-name">${escapeHTML(p.name)}</span>
+            ${p.enabled ? '' : '<span class="badge disabled" style="margin-left:6px">disabled</span>'}
+          </div>
+          <div style="display:flex; gap:4px;">
+            <button class="btn-icon toggle-provider-btn" data-name="${escapeHTML(p.name)}" data-enabled="${p.enabled}" title="${p.enabled ? 'Disable' : 'Enable'}">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                ${p.enabled ? '<path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line>' : '<polygon points="5 3 19 12 5 21 5 3"></polygon>'}
+              </svg>
+            </button>
+            <button class="btn-icon delete-provider-btn" data-name="${escapeHTML(p.name)}" title="Delete">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
+        </div>
+        <div class="provider-url">${escapeHTML(p.base_url)}</div>
+        ${p.models && p.models.length ? `<div class="provider-models">${p.models.map(escapeHTML).join(', ')}</div>` : ''}
+      </div>
+    `).join('');
+
+    document.querySelectorAll('.toggle-provider-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const name = e.currentTarget.dataset.name;
+        const newEnabled = e.currentTarget.dataset.enabled !== 'true';
+        try {
+          await apiCall('/api/providers/update', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ name, enabled: newEnabled })
+          });
+          showToast(`${newEnabled ? 'Enabled' : 'Disabled'} ${name}`);
+          await Promise.all([loadProviders(), loadModels()]);
+        } catch (err) {
+          showToast('Failed to toggle provider', 'error');
+        }
+      });
+    });
+
+    document.querySelectorAll('.delete-provider-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        if (!confirm('Delete provider?')) return;
+        const name = e.currentTarget.dataset.name;
+        try {
+          await apiCall(`/api/providers/${encodeURIComponent(name)}`, { method: 'DELETE' });
+          showToast(`Deleted ${name}`);
+          await Promise.all([loadProviders(), loadModels()]);
+        } catch (err) {
+          showToast('Failed to delete provider', 'error');
+        }
+      });
+    });
+  } catch (err) {
+    UI.providersContainer.innerHTML = `<div class="empty-state text-err">Failed to load providers</div>`;
+  }
+};
+
+/* ─── Provider Form ─── */
+UI.addProviderBtn.addEventListener('click', () => {
+  UI.providerForm.reset();
+  UI.providerTestResult.innerHTML = '';
+  UI.addProviderDialog.showModal();
+});
+
+UI.closeAddProviderBtn.addEventListener('click', () => {
+  UI.addProviderDialog.close();
+});
+
+UI.testProviderBtn.addEventListener('click', async () => {
+  const name = document.getElementById('provider-name').value.trim();
+  const baseUrl = document.getElementById('provider-base-url').value.trim();
+  const apiKey = document.getElementById('provider-api-key').value.trim();
+  if (!baseUrl || !apiKey) {
+    UI.providerTestResult.innerHTML = `<span class="text-err">Base URL and API key required</span>`;
+    return;
+  }
+  UI.testProviderBtn.disabled = true;
+  UI.providerTestResult.innerHTML = `<span class="text-dim">Testing...</span>`;
+  try {
+    // Add temporarily then test
+    const res = await apiCall('/api/providers', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ name: name || '_test', base_url: baseUrl, api_key: apiKey,
+        models: document.getElementById('provider-models').value.split(',').map(s => s.trim()).filter(Boolean) || [] })
+    });
+    if (res.error) throw new Error(res.error);
+    // Now test connection
+    const testRes = await apiCall('/api/providers/test', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ name: name || '_test' })
+    });
+    if (testRes.ok) {
+      const models = testRes.models || [];
+      UI.providerTestResult.innerHTML = `<span class="text-ok">Connected — ${models.length} models found</span>`;
+      // Delete temp provider, user needs to click Add
+      if (name === '_test' || !name) {
+        await apiCall(`/api/providers/${encodeURIComponent('_test')}`, { method: 'DELETE' });
+      } else {
+        await apiCall(`/api/providers/${encodeURIComponent(name)}`, { method: 'DELETE' });
+      }
+    } else {
+      UI.providerTestResult.innerHTML = `<span class="text-err">Connection failed</span>`;
+    }
+  } catch (err) {
+    UI.providerTestResult.innerHTML = `<span class="text-err">${escapeHTML(err.message || 'Test failed')}</span>`;
+    // Clean up temp
+    const tmpName = name || '_test';
+    try { await apiCall(`/api/providers/${encodeURIComponent(tmpName)}`, { method: 'DELETE' }); } catch {}
+  } finally {
+    UI.testProviderBtn.disabled = false;
+  }
+});
+
+UI.providerForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = document.getElementById('provider-name').value.trim();
+  const baseUrl = document.getElementById('provider-base-url').value.trim();
+  const apiKey = document.getElementById('provider-api-key').value.trim();
+  const models = document.getElementById('provider-models').value.split(',').map(s => s.trim()).filter(Boolean);
+  if (!name || !baseUrl || !apiKey) return;
+  const btn = UI.providerForm.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  try {
+    await apiCall('/api/providers', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ name, base_url: baseUrl, api_key: apiKey, models })
+    });
+    showToast(`Provider ${name} added`);
+    UI.addProviderDialog.close();
+    await Promise.all([loadProviders(), loadModels()]);
+  } catch (err) {
+    showToast('Failed to add provider', 'error');
+  } finally {
+    btn.disabled = false;
+  }
+});
 
 /* ─── Combos ─── */
 const renderCombos = async () => {
@@ -407,11 +575,12 @@ const pollAddAccount = async () => {
 
 /* ─── Init ─── */
 const init = async () => {
-  await Promise.all([loadProxy(), loadData(), renderCombos(), loadModels()]).catch(() => {});
+  await Promise.all([loadProxy(), loadData(), renderCombos(), loadModels(), loadProviders()]).catch(() => {});
   setInterval(loadData, 60000);
   setInterval(loadProxy, 120000);
   setInterval(renderCombos, 120000);
   setInterval(loadModels, 120000);
+  setInterval(loadProviders, 120000);
 };
 
 init();
