@@ -14,3 +14,8 @@ build/
 gui.log
 # screenshots for Discord/chat are not repo artifacts
 *.png
+# python envs & IDE
+venv/
+.venv/
+.vscode/
+.idea/

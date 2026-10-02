@@ -379,7 +379,6 @@ def _make_handler(auth_dirs: list[str], proxy=None, host: str = "127.0.0.1", por
                 # --- external provider routing ---
                 # If this is a /v1/chat/completions (or /v1/completions) request,
                 # check if the requested model belongs to an external provider.
-                routed_external = False
                 if body and self.path.startswith("/v1/"):
                     try:
                         payload = json.loads(body)
