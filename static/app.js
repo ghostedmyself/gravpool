@@ -262,6 +262,15 @@ const loadModels = async () => {
   }
 };
 
+/* Bento tile cursor shine — drive --gx/--gy per tile from mousemove */
+UI.modelsGrid.addEventListener('mousemove', (e) => {
+  const tile = e.target.closest('.model-group');
+  if (!tile) return;
+  const r = tile.getBoundingClientRect();
+  tile.style.setProperty('--gx', `${((e.clientX - r.left) / r.width) * 100}%`);
+  tile.style.setProperty('--gy', `${((e.clientY - r.top) / r.height) * 100}%`);
+});
+
 /* ─── External Providers ─── */
 const loadProviders = async () => {
   UI.providersContainer.innerHTML = `<div class="skeleton-card"></div><div class="skeleton-card"></div>`;

@@ -7,6 +7,14 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
+  <!-- Ambient background blobs (glass/soft-UI depth) -->
+  <div class="bg-ambient" aria-hidden="true">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+    <div class="grain"></div>
+  </div>
+
   <!-- Toasts -->
   <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
@@ -37,7 +45,7 @@
 
   <main class="container">
     <!-- Stats Strip -->
-    <section class="stats-strip">
+    <section class="stats-strip glass">
       <div class="stat">
         <span class="stat-num" id="stat-total">—</span>
         <span class="stat-lbl">Accounts</span>
@@ -65,8 +73,7 @@
 
     
 
-    <!-- External Providers Section -->
-    <section class="providers-section">
+    <section class="providers-section glass-panel">
       <div class="col-header">
         <h2>External Providers</h2>
         <button id="add-provider-btn" class="btn btn-primary">Add Provider</button>
@@ -79,7 +86,7 @@
     <!-- Two-column layout: Accounts & Combos -->
     <div class="grid-main">
       <!-- Accounts Column -->
-      <section class="col-accounts">
+      <section class="col-accounts glass-panel">
         <div class="col-header">
           <h2>Accounts</h2>
           <button id="reload-quota-btn" class="btn btn-ghost">Reload</button>
@@ -91,7 +98,7 @@
       </section>
 
       <!-- Combos Column -->
-      <section class="col-combos">
+      <section class="col-combos glass-panel">
         <div class="col-header">
           <h2>Combos</h2>
         </div>
@@ -110,7 +117,7 @@
       </section>
     </div>
     <!-- Models Section -->
-    <section class="models-section">
+    <section class="models-section glass-panel">
       <div class="col-header">
         <h2>Available Models</h2>
         <span class="models-count" id="models-count">—</span>
