@@ -175,21 +175,65 @@ def remove_provider(name: str) -> bool:
 
 # ─── model discovery ─────────────────────────────────────────────────────
 
+def _normalize_base(url: str) -> str:
+    """Normalize a provider base URL. Auto-append /v1 if it looks like a bare
+    API root (e.g. https://api.openai.com -> https://api.openai.com/v1)."""
+    u = (url or "").rstrip("/")
+    if not u:
+        return u
+    # If the path already looks like an API version or endpoint, leave it.
+    if u.endswith("/v1") or "/v1/" in u:
+        return u
+    # Bare roots get /v1 appended (OpenAI-compatible convention).
+    return u + "/v1"
+
+
 def fetch_provider_models(provider: Provider, *, timeout: int = 10) -> list[str]:
-    """GET {base_url}/models with the provider's API key."""
-    url = provider.base_url.rstrip("/") + "/models"
+    """GET <base>/models with the provider's API key. Tries the normalized
+    base URL, then falls back to the raw base URL in case the provider
+    already routes /models without a /v1 prefix."""
+    base = _normalize_base(provider.base_url)
+    tried = []
+    for candidate in [base, provider.base_url.rstrip("/")]:
+        if candidate in tried:
+            continue
+        tried.append(candidate)
+        url = candidate + "/models"
+        req = urlreq.Request(url, headers={
+            "Authorization": f"Bearer {provider.api_key}",
+            "Accept": "application/json",
+            "Accept-Encoding": "gzip",
+        })
+        try:
+            with urlreq.urlopen(req, timeout=timeout) as resp:
+                raw = resp.read()
+                import gzip
+                if resp.headers.get("Content-Encoding") == "gzip":
+                    try:
+                        raw = gzip.decompress(raw)
+                    except OSError:
+                        pass
+                data = json.loads(raw)
+            models = []
+            for m in data.get("data", []):
+                mid = m.get("id") if isinstance(m, dict) else str(m)
+                if mid:
+                    models.append(mid)
+            if models:
+                return sorted(models)
+        except Exception:
+            continue
+    # All candidates failed; surface the last error for the last candidate.
+    url = tried[-1] + "/models" if tried else provider.base_url + "/models"
     req = urlreq.Request(url, headers={
-        "Authorization": f"Bearer {provider.api_key}",
-        "Accept": "application/json",
+        "Authorization": f"Bearer {provider.api_key}", "Accept": "application/json",
     })
-    with urlreq.urlopen(req, timeout=timeout) as resp:
-        data = json.loads(resp.read())
-    models = []
-    for m in data.get("data", []):
-        mid = m.get("id") if isinstance(m, dict) else str(m)
-        if mid:
-            models.append(mid)
-    return sorted(models)
+    try:
+        with urlreq.urlopen(req, timeout=timeout) as resp:
+            data = json.loads(resp.read())
+    except Exception as e:
+        raise RuntimeError(str(e)) from e
+    return [m["id"] for m in (data.get("data") or []) if isinstance(m, dict) and m.get("id")]
 
 
 def resolve_provider_models(provider: Provider) -> list[str]:

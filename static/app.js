@@ -54,8 +54,16 @@ const showToast = (msg, type = 'info') => {
 const apiCall = async (url, options = {}) => {
   try {
     const res = await fetch(url, options);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
+    let data = null;
+    try { data = await res.json(); } catch { /* non-JSON */ }
+    if (!res.ok) {
+      const backendErr = (data && data.error) ? String(data.error) : `HTTP ${res.status}`;
+      const e = new Error(backendErr);
+      e.status = res.status;
+      e.data = data;
+      throw e;
+    }
+    return data;
   } catch (err) {
     console.error(`API Error (${url}):`, err);
     throw err;
@@ -372,7 +380,12 @@ UI.testProviderBtn.addEventListener('click', async () => {
       UI.providerTestResult.innerHTML = `<span class="text-err">Connection failed</span>`;
     }
   } catch (err) {
-    UI.providerTestResult.innerHTML = `<span class="text-err">${escapeHTML(err.message || 'Test failed')}</span>`;
+    const m = err.message || 'Test failed';
+    let hint = '';
+    if (/401|403/.test(m)) hint = ' - check API key';
+    else if (/404/.test(m)) hint = ' - check base URL (try ending with /v1)';
+    else if (/timed out|timeout/i.test(m)) hint = ' - provider unreachable';
+    UI.providerTestResult.innerHTML = `<span class="text-err">${escapeHTML(m)}${hint}</span>`;
   } finally {
     UI.testProviderBtn.disabled = false;
   }
