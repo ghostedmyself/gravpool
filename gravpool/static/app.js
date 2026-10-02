@@ -32,6 +32,11 @@ let state = {
   pollingAuth: false
 };
 
+/* Model pool (antigravity) — diisi loadModels; dipakai renderAccounts untuk
+   menyaring slot kuota agar jumlah model per akun = model yang benar-benar
+   tersedia di gateway (bukan semua slot kuota legacy). */
+let POOL_MODELS = new Set();
+
 const escapeHTML = str => {
   if (typeof str !== 'string') return '';
   return str.replace(/[&<>'"]/g, tag => ({
@@ -135,15 +140,24 @@ const renderAccounts = (statusData, quotaData) => {
   UI.accountsContainer.innerHTML = statusData.map(acc => {
     const qData = quotaData.accounts?.[acc.email];
     let quotaHtml = '';
+    // Pool-entri kuota per akun: HANYA model yang tersedia di gateway pool
+    // (bukan semua slot kuota legacy = 27). Dihitung sekali agar dot, bar,
+    // dan count selalu konsisten dari set yang sama.
+    let poolModels = null;
+    if (qData && qData.models) {
+      const entries = Object.entries(qData.models)
+        .filter(([mid]) => POOL_MODELS.size === 0 || POOL_MODELS.has(mid));
+      poolModels = entries.map(([, v]) => v);
+    }
 
     // — estilo fleet-control (mirip panel antigravity): satu bar per akun —
     if (qData && qData.error) {
       quotaHtml = `<div class="inline-err">Quota error: ${escapeHTML(qData.error)}</div>`;
-    } else if (qData && qData.models) {
-      const models = Object.values(qData.models);
+    } else if (poolModels) {
+      const models = poolModels;
       const pcts = models.map(m => (m.remaining * 100));
       const avg = pcts.reduce((a, b) => a + b, 0) / (pcts.length || 1);
-      const worst = Math.min(...pcts);
+      const worst = pcts.length ? Math.min(...pcts) : 100;
       const colorClass = worst < 20 ? 'low' : worst < 50 ? 'mid' : 'high';
       const resets = models.map(m => m.reset).filter(Boolean);
       const resetStr = resets.length
@@ -177,7 +191,11 @@ const renderAccounts = (statusData, quotaData) => {
       <div class="card">
         <div class="card-row">
           <div class="acc-id">
-            <span class="acc-dot" style="background:${qData && qData.models ? (Math.min(...Object.values(qData.models).map(m => m.remaining * 100)) > 50 ? '#10b981' : Math.min(...Object.values(qData.models).map(m => m.remaining * 100)) > 20 ? '#f59e0b' : '#ef4444') : '#71717a'}"></span>
+            <span class="acc-dot" style="background:${poolModels && poolModels.length
+              ? (Math.min(...poolModels.map(m => m.remaining * 100)) > 50 ? '#10b981'
+                : Math.min(...poolModels.map(m => m.remaining * 100)) > 20 ? '#f59e0b'
+                : '#ef4444')
+              : '#71717a'}"></span>
             <span class="card-email">${escapeHTML(acc.email)}</span>
             <span class="badge ${acc.state}">${acc.state}</span>
           </div>
@@ -225,6 +243,7 @@ const loadModels = async () => {
     ]);
     const proxyModels = (proxyRes.data || []).filter(m => m && m.id)
       .map(m => ({ id: m.id, source: 'antigravity' }));
+    POOL_MODELS = new Set(proxyModels.map(m => m.id));
     const extModels = (extRes.data || []).filter(m => m && m.id)
       .map(m => ({ id: m.id, source: m.provider || 'external' }));
     const all = [...proxyModels, ...extModels];
@@ -534,7 +553,8 @@ UI.refreshAllBtn.addEventListener('click', async () => {
 UI.reloadQuotaBtn.addEventListener('click', async () => {
   UI.reloadQuotaBtn.disabled = true;
   try {
-    await Promise.all([loadData(), loadModels()]);
+    await loadModels();
+    await loadData();
     showToast('Reloaded data');
   } finally {
     UI.reloadQuotaBtn.disabled = false;
@@ -618,7 +638,10 @@ const pollAddAccount = async () => {
 
 /* Init */
 const init = async () => {
-  await Promise.all([loadProxy(), loadData(), renderCombos(), loadModels(), loadProviders()]).catch(() => {});
+  // Muat pool model DULU supaya POOL_MODELS terisi sebelum renderAccounts
+  // pertama kali (kalau tidak -> race, kartu ngitung semua slot kuota = 27).
+  await Promise.all([loadProxy(), loadModels(), loadProviders(), renderCombos()]).catch(() => {});
+  await loadData().catch(() => {});
   setInterval(loadData, 60000);
   setInterval(loadProxy, 120000);
   setInterval(renderCombos, 120000);
