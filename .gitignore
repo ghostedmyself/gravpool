@@ -2,7 +2,7 @@
 antigravity-*.json
 gravpool/_local_creds.py
 *.json.tmp
-bin/
+bin/*
 !bin/gravpool.js
 auth/
 config.yaml
