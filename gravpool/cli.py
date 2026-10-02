@@ -8,7 +8,6 @@ Usage:
   python -m gravpool.cli gui          [--host H] [--port P] [--no-proxy]  # web dashboard
   python -m gravpool.cli add-account  [--no-browser]            # OAuth login for new account
   python -m gravpool.cli combo        list|add|rm|resolve ...   # manage model combos
-  python -m gravpool.cli login-binary [--binary PATH] [--config PATH]
 """
 from __future__ import annotations
 
@@ -149,17 +148,6 @@ def cmd_combo(args) -> int:
     raise SystemExit("unknown combo subcommand")
 
 
-def cmd_login_binary(args) -> int:
-    """Run the pool binary's built-in `--antigravity-login` flow."""
-    binary = args.binary or proxy_binary()
-    cmd = [binary]
-    if args.config:
-        cmd += ["--config", args.config]
-    cmd.append("--antigravity-login")
-    print("running:", " ".join(cmd))
-    os.execvp(cmd[0], cmd)
-
-
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -218,11 +206,6 @@ def main(argv=None) -> int:
     sp.add_argument("--no-proxy", action="store_true", default=False)
     sp.add_argument("--proxy-port", type=int, default=0)
     sp.set_defaults(fn=cmd_gui)
-
-    sp = sub.add_parser("login-binary", help="run cli-proxy-api --antigravity-login")
-    sp.add_argument("--binary", default=None)
-    sp.add_argument("--config", default=None)
-    sp.set_defaults(fn=cmd_login_binary)
 
     sp = sub.add_parser("add-account", help="one-command browser login for a new account")
     add_dirs(sp)

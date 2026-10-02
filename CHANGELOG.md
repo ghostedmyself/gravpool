@@ -5,6 +5,23 @@ Semua perubahan penting pada proyek ini dicatat di sini.
 Format berdasarkan [Keep a Changelog](https://keepachangelog.com/id/1.0.0/),
 dan proyek ini mengikuti [Semantic Versioning](https://semver.org/lang/id/).
 
+## [1.0.0] - 2026-10-02
+
+Public release — instalasi satu-perintah & dokumentasi profesional.
+
+### Ditambahkan
+- Instalasi **satu-perintah** via `curl -LsSf …/install.sh | bash` — install ke
+  `~/.local/share/gravpool`, launcher `gravpool` di PATH, otomatis fetch proxy binary.
+- README ditulis ulang untuk rilis publik (one-command install, feature bullets,
+  struktur bersih tanpa bagian duplikat).
+
+### Dihapus
+- Subcommand CLI `login-binary` (kode lama yang tidak diperlukan).
+- Semua referensi stale (`rotate.py`, `rotasi`) dari kode & dokumentasi.
+
+### Diubah
+- Bump versi ke **1.0.0**.
+
 ## [0.4.3] - 2026-10-02
 
 ### Dihapus

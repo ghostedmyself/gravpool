@@ -7,7 +7,7 @@ Melalui setup satu-bundle, endpoint **OpenAI-compatible** sudah disiapkan untukm
 1. Pastikan OpenCode terinstall: `npm i -g opencode-ai@latest`
 2. Pastikan dashboard GravPool sudah berjalan di terminalmu:
    ```bash
-   python -m gravpool.cli gui --auth-dirs auth --port 8390
+   gravpool gui --port 8390
    ```
 3. Atur kredensial. Contohnya lewat environment variable agar aman:
    ```bash

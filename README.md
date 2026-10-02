@@ -1,287 +1,102 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.9%2B-3776AB?logo=python&logoColor=white" alt="Python 3.9+">
-  <img src="https://img.shields.io/badge/stdlib%20only-✅-brightgreen" alt="stdlib only">
+  <img src="https://img.shields.io/badge/stdlib-only-0f766e" alt="stdlib only">
   <img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT">
-  <img src="https://img.shields.io/badge/status-verified%20live-3fb950" alt="verified live">
+  <img src="https://img.shields.io/github/v/release/ghostedmyself/gravpool" alt="release">
 </p>
 
 <h1 align="center">GravPool</h1>
-<p align="center"><b>Kelola akun Google Antigravity Pro sebagai pool kredensial OAuth</b><br>
-refresh otomatis · monitoring kuota live · gateway OpenAI-compatible · web dashboard</p>
+<p align="center"><b>Satu perintah → gateway AI OpenAI-compatible yang selalu sehat.</b><br>
+kelola akun Google Antigravity Pro · tambah provider eksternal · dashboard web</p>
+
+<p align="center">
+  <code>curl -LsSf https://raw.githubusercontent.com/ghostedmyself/gravpool/main/install.sh | bash</code>
+</p>
 
 ---
 
-## Apa ini?
+GravPool mengubah kredensial **Google Antigravity Pro** menjadi *credential pool*
+yang bisa di-refresh dan dimonitor otomatis, lalu diekspos lewat satu endpoint
+OpenAI-compatible di depan Gemini/Claude/GPT. Kamu juga bisa menyuntikkan
+**API key provider eksternal** (OpenAI, OpenRouter, atau endpoint custom) ke
+gateway yang sama — semua diakses lewat satu `sk-local`.
 
-GravPool mengubah satu atau beberapa akun **Google Antigravity Pro**
-menjadi *credential pool* yang bisa di-refresh, dimonitor kuotanya, dan
-dirotasi — lalu dipakai lewat endpoint OpenAI-compatible (CLIProxyAPI) di
-depan model Gemini 3 / Claude Sonnet / GPT.
-
-Tanpa dependency apa pun (pure Python stdlib). Teruji live terhadap akun Pro
-(Okt 2026).
+Tanpa dependency apa pun (pure Python stdlib). Teruji live terhadap akun Pro.
 
 ---
 
-## 📖 Daftar isi
-
-- [Alur kerja](#-alur-kerja)
-- [Quickstart](#-quickstart)
-- [Fitur](#-fitur)
-- [Struktur proyek](#-struktur-proyek)
-- [CLI reference](#-cli-reference)
-- [Schema auth file](#-schema-auth-file)
-- [Integrasi](#-integrasi)
-- [Catatan](#-catatan)
-
----
-
-## 🌟 Fitur Baru (0.4.1 & 0.4.2)
-
-- **External Providers**: Tambahkan API key OpenAI/Anthropic/custom dan provider luar ke unified gateway `sk-local`. Semua request dirouting otomatis ke eksternal jika model cocok.
-- **Provider Auto-Detect**: Cukup masukkan Base URL dan API Key, klik "Test Connection", GravPool akan memanggil `/models` dari provider secara otomatis.
-- **Auth Verify**: Setelah callback OAuth selesai, token langsung dites ke endpoint quota. Status "verified, N models" membuktikan akun valid.
-- **Token Countdown**: Di dashboard, setiap card akun kini menampilkan waktu relatif countdown token expiry (contoh: *refresh in 35m*).
-- **Quota Grouping**: List kuota tidak lagi penuh dengan 27 model. Model dikelompokkan dalam kategori/tier kuota utama sehingga cukup menampilkan 2-3 bar progress saja.
-- **Obsidian UI**: Redesign dashboard dengan tema Black-Gold / Obsidian, terlihat jauh lebih profesional, solid, dan mudah dibaca.
-
----
-
-## 🔁 Alur kerja
-
-```mermaid
-flowchart LR
-    A["🔑 Google Account<br/><i>Antigravity Pro</i>"] -->|"OAuth consent<br/><code>add-account</code>"| C["<b>auth file</b><br/><code>antigravity-&lt;email&gt;.json</code>"]
-    C --> D["<b>GravPool</b> (Satu Proses)"]
-    D --> E["refresh<br/><code>refresh_token → access_token</code>"]
-    D --> F["quota<br/><code>fetchAvailableModels</code>"]
-    D --> G["rotation<br/>round-robin"]
-    E --> H["🖥️ web GUI<br/><code>:8390</code>"]
-    F --> H
-    G --> H
-    D --> I["OpenAI-compatible<br/><code>:8390/v1</code><br/>(via embedded CLIProxyAPI)"]
-    I --> J["🤖 OpenCode / klien lain"]
-```
-
-**Ringkasnya:** akun Google → token OAuth → disimpan sebagai JSON →
-pool ini yang ngurusin refresh + kuota + gateway → dipakai lewat endpoint
-OpenAI-compatible di OpenCode atau tool apa pun.
-
----
-
-## ⚡ Quickstart (Satu Bundle)
-
-Instalasi dan konfigurasi sekarang jadi satu alur otomatis yang menyatukan proxy dan dashboard dalam satu port.
+## ⚡ Mulai dalam 60 detik
 
 ```bash
-# a. clone (atau download ZIP)
-git clone https://github.com/ghostedmyself/gravpool.git
-cd gravpool
+curl -LsSf https://raw.githubusercontent.com/ghostedmyself/gravpool/main/install.sh | bash
 
-# b. jalankan bundle untuk download proxy
-./install.sh   # atau install.bat di Windows, atau `python bundle.py --no-login`
-
-# c. login akun Google (lakukan sekali)
-python -m gravpool.cli add-account --auth-dir auth
-
-# d. jalankan dashboard + proxy secara bersamaan
-python -m gravpool.cli gui --auth-dirs auth
+# jalankan gateway + dashboard (bisa juga cukup: gravpool gui)
+gravpool gui --port 8390
 ```
 
-Setelah itu:
-- Buka dashboard di http://127.0.0.1:8390
-- Arahkan OpenAI client apa pun ke endpoint `http://127.0.0.1:8390/v1` dengan API key `sk-local`
+Buka dashboard di **http://127.0.0.1:8390**, lalu:
+- **Add Account** — login akun Google Antigravity (sekali, lewat browser)
+- **Add Provider** — masukkan API key eksternal + base URL, otomatis detect model
+- Gunakan endpoint `http://127.0.0.1:8390/v1` dengan API key `sk-local` dari
+  OpenCode, Cline, Cursor, atau tool apa pun.
 
-> Kredensial OAuth publik sudah **built-in** — tidak perlu copy/edit file creds.
-> Mau pakai client sendiri? export `ANTIGRAVITY_CLIENT_ID` / `ANTIGRAVITY_CLIENT_SECRET`
-> atau isi `gravpool/_local_creds.py`.
-
----
+> Kredensial OAuth publik sudah **built-in** — tidak perlu setup client sendiri.
+> Query ulang pakai `gravpool gui` untuk update ke versi terbaru (idempotent).
 
 ## ✨ Fitur
 
-| Kategori | Fitur | Modul |
-|---|---|---|
-| 🔑 **OAuth** | refresh token otomatis, login akun baru (1-command browser), userinfo | `oauth.py`, `login_flow.py` |
-| 📊 **Kuota** | `fetchAvailableModels` live, snapshot JSON, cache | `quota.py` |
-| 🧩 **Combo** | model virtual `fallback`/`fusion`, auto-skip kuota habis | `combo.py` |
-| 💾 **Storage** | model auth file CLIProxyAPI-compatible, scan + expiry | `store.py` |
-| 🖥️ **GUI** | dashboard web zero-dep, proxy terintegrasi — dashboard + `/v1` satu port | `web.py` |
-| 🔗 **Providers** | External Providers: tambah API Endpoint eksternal (OpenAI, dll) ke pool gateway. | `providers.py` |
-| 🛡️ **Verifikasi** | Auth verify (test token post-OAuth terhadap API kuota). | `login_flow.py` |
-| 🎨 **UI** | Desain Obsidian/Black-Gold baru, countdown expiry, quota grouping (2-3 bars), provider auto-detect. | `web.py` / `static/` |
-| ⌨️ **CLI** | `status` / `quota` / `refresh` / `gui` / `add-account` / `combo` | `cli.py` |
+- **Unified gateway** — Antigravity + provider eksternal, satu endpoint, satu key `sk-local`.
+- **Provider auto-detect** — isi base URL + key, GravPool langsung cari model via `/models`.
+- **Refresh & quota otomatis** — token expired di-refresh otomatis, kuota live per akun.
+- **Auth verify** — token dites ke API quota setelah login → status "verified, N models".
+- **Combo routing** — gabungkan model dengan fallback/fusion otomatis (skip yang kuota habis).
+- **Dashboard Obsidian** — pemantauan kuota, token countdown, dan manajemen dalam satu panel.
 
----
+## 🔌 Cara pakai endpoint
 
-## 📁 Struktur proyek
+```bash
+# di tool AI apa pun (OpenCode, Cline, Cursor, …)
+BASE_URL=http://127.0.0.1:8390/v1
+API_KEY=sk-local
+MODEL=muse            # dari provider eksternal
+MODEL=claude-sonnet-4-6   # dari akun Antigravity
+```
+
+Config OpenCode siap pakai ada di [`examples/opencode.json`](examples/opencode.json),
+panduan di [`docs/opencode.md`](docs/opencode.md).
+
+## 🛠️ CLI
+
+```bash
+gravpool status        # state token tiap akun
+gravpool quota         # snapshot kuota live
+gravpool refresh       # refresh semua token expired
+gravpool gui           # dashboard + gateway (default port 8390)
+gravpool add-account   # login akun Google baru (browser consent)
+gravpool combo         # kelola combo fallback/fusion
+```
+
+Semua perintah menerima `--auth-dirs DIR [DIR ...]` untuk menunjuk lokasi auth file.
+
+## 🏗️ Struktur
 
 ```
 gravpool/
-├── gravpool/                    # paket inti (stdlib only)
-│   ├── constants.py             #   OAuth client + endpoint (publik, built-in)
-│   ├── store.py                 #   model & scan auth file
-│   ├── oauth.py                 #   refresh / login / userinfo
-│   ├── login_flow.py            #   login 1-command (browser callback)
-│   ├── combo.py                 #   virtual model combo (fallback/fusion)
-│   ├── quota.py                 #   fetchAvailableModels + snapshot
-│   ├── providers.py             #   external provider registry
-│   ├── proxy.py                 #   spawn + supervise CLIProxyAPI (embedded /v1)
-│   ├── web.py                   #   dashboard web zero-dep + reverse-proxy /v1
-│   ├── cli.py                   #   antarmuka command-line
-│   ├── _local_creds.py.example  #   template kredensial (opsional, GITIGNORED)
-├── install.sh / install.bat     # installer 1-command (cek Python + login)
-├── bundle.py                    # one-command bundle (login + download proxy + config)
-├── examples/
-│   └── opencode.json            # config provider OpenCode siap pakai
-├── docs/
-│   ├── install.md               # panduan instalasi satu-bundle
-│   └── opencode.md              # panduan integrasi OpenCode
-├── static/                      # UI dashboard (index.html, style.css, app.js)
-├── CHANGELOG.md                 # riwayat perubahan (Keep a Changelog)
-├── pyproject.toml               # metadata paket
-├── LICENSE                      # MIT
-└── README.md
+├── gravpool/            # paket inti (stdlib only)
+│   ├── web.py           #   dashboard + reverse-proxy /v1
+│   ├── providers.py     #   provider eksternal (auto-detect model)
+│   ├── quota.py         #   fetchAvailableModels live
+│   ├── store.py         #   auth file CLIProxyAPI-compatible
+│   ├── oauth.py         #   refresh / login
+│   ├── combo.py         #   combo virtual (fallback/fusion)
+│   └── cli.py           #   antarmuka command-line
+├── static/              # UI dashboard (index.html, style.css, app.js)
+├── docs/                # panduan install & integrasi
+├── examples/            # config siap pakai
+├── install.sh           # installer satu-perintah
+└── bundle.py            # fetch CLIProxyAPI proxy binary
 ```
 
----
-
-## 🛠️ CLI reference
-
-| Perintah | Fungsi |
-|---|---|
-| `status` | tampilkan state token tiap akun (ok / expired / disabled) |
-| `quota` | ringkasan kuota per akun; `--out file.json` untuk snapshot penuh |
-| `refresh` | refresh semua token yang expired |
-| `gui` | jalankan dashboard web dan embedded proxy (`--host` / `--port`). Default port 8390. Gunakan `--no-proxy` untuk mematikan proxy. |
-| `add-account` | login akun baru 1-command: browser consent → callback → simpan auth file |
-| `combo` | kelola virtual model combo: `list` / `add` / `rm` / `resolve` |
-| `login-binary` | tambah akun baru lewat flow login bawaan `cli-proxy-api` |
-
-Semua perintah menerima `--auth-dirs DIR [DIR ...]` untuk menunjuk lokasi
-auth file (default `/root/.cli-proxy-api*` di server).
-
-### Login akun baru (tanpa binary)
-
-```bash
-# 1 command, langsung buka browser untuk consent Google:
-python -m gravpool.cli add-account
-
-# kalau di server headless (browser tidak bisa dibuka otomatis):
-python -m gravpool.cli add-account --no-browser   # print URL, paste manual
-```
-
-### Combo (virtual model dengan fallback otomatis)
-
-```bash
-# buat combo fallback: kalau gemini-3-pro kuota habis → claude-sonnet-4-6
-python -m gravpool.cli combo add main gemini-3-pro claude-sonnet-4-6
-
-# lihat daftar + resolve terhadap kuota live:
-python -m gravpool.cli combo list
-python -m gravpool.cli combo resolve main
-
-# hapus combo:
-python -m gravpool.cli combo rm main
-```
-
-`kind` bisa `fallback` (coba berurutan, pindah saat kuota habis) atau `fusion`
-(gabung semua model yang tersedia). Kelola combo juga bisa dari dashboard web.
-
----
-
-## 📄 Schema auth file
-
-Satu file per akun, **CLIProxyAPI-compatible** (drop-in):
-
-```jsonc
-{
-  "access_token":  "ya29.…",              // token akses (diputar oleh oauth.py)
-  "disabled":      false,                 // skip dari rotasi akun
-  "email":         "user@gmail.com",      // identitas akun
-  "expired":       "2026-10-01T13:01:06Z",// ISO8601 UTC, di-parse store.py
-  "expires_in":    3599,                  // detik
-  "project_id":    "aicode-consumers",    // project Google tetap
-  "refresh_token": "1//0g…",              // RAHASIA — jaga dir 0700
-  "timestamp":     1790856067175,         // epoch ms
-  "type":          "antigravity"          // identitas provider
-}
-```
-
----
-
-## 🌐 OpenAI-compatible endpoint
-
-Endpoint OpenAI-compatible sekarang terintegrasi langsung ke dalam proses GUI (melalui *child process* CLIProxyAPI yang di-reverse proxy secara streaming). 
-
-Cara pakainya:
-1. Pastikan GUI berjalan: `python -m gravpool.cli gui --auth-dirs auth`
-2. Di client/tool AI-mu (seperti OpenCode, Cline, Cursor), set:
-   - **Base URL:** `http://127.0.0.1:8390/v1`
-   - **API Key:** `sk-local`
-
-> **Note:** GravPool mengatur manajemen akun, refresh, dan kuota, serta otomatis menjalankan proxy di background tanpa perlu terminal terpisah.
-
----
-
-## 🔌 Integrasi
-
-### OpenCode
-
-Endpoint OpenAI-compatible dari CLIProxyAPI bisa langsung dipakai OpenCode:
-
-```bash
-opencode run "Explain this codebase" --model antigravity/claude-sonnet-4-6
-```
-
-Config lengkap di [`examples/opencode.json`](examples/opencode.json),
-panduan di [`docs/opencode.md`](docs/opencode.md).
-
-### CLIProxyAPI (standalone, opsional)
-
-Secara default proxy sudah berjalan otomatis di dalam `gui`. Jika ingin
-menjalankan `cli-proxy-api` secara terpisah, gunakan config v8 nested yang
-sama seperti yang di-generate `bundle.py` (`config.yaml`):
-
-```yaml
-# config.yaml (schema v8 — nested)
-server:
-  host: 127.0.0.1
-  port: 8390
-oauth:
-  auth-dir: ./auth
-access:
-  api-keys:
-    - "sk-local"
-```
-
-### Library
-
-```python
-from gravpool.store import load_accounts
-from gravpool.quota import pool_quota
-
-accounts = load_accounts(["/root/.cli-proxy-api"])
-for acct in accounts:
-    q = pool_quota([acct])
-    print(q)
-```
-
----
-
-## 📝 Catatan
-
-- **Kredensial OAuth (ClientID/ClientSecret) bersifat publik** — nilai ini
-  embedded di IDE Antigravity dan dipublikasikan di upstream open-source
-  (router-for-me/CLIProxyAPI). Yang rahasia cuma `refresh_token` milikmu;
-  simpan auth dir dengan permission `0700`.
-- **`remainingFraction`** adalah metrik kuota asli Antigravity (0..1 per
-  model); reset-nya rolling window yang dilaporkan lewat `resetTime`.
-- **Login akun baru** pakai `add-account` (flow OAuth dibangun langsung di
-  `login_flow.py`; tidak butuh binary eksternal).
-
----
-
-## 📄 License
+## 📄 Lisensi
 
 [MIT](LICENSE) © 2026 Omni.labs
